@@ -204,12 +204,31 @@ def main():
             uploader_side = selected_sample.get("uploader_side", "UNKNOWN")
             case_hint = selected_sample.get("case_hint", selected_sample.get("case_name", ""))
             transcript_url = selected_sample.get("transcript_url", "")
+            precomputed_prediction = selected_sample.get("precomputed_prediction")
             
             if not brief_text:
                 st.error("Sample brief text is missing")
                 return
             
             st.info(f"📄 Using sample brief: **{selected_sample['case_name']}**")
+            
+            # Use precomputed prediction if available (instant results)
+            if precomputed_prediction:
+                st.success("⚡ Using precomputed predictions (instant results)")
+                from utils.schemas import VoteQuestionPrediction
+                try:
+                    prediction = VoteQuestionPrediction.model_validate(precomputed_prediction)
+                    # Skip to displaying results - no API calls needed
+                    # Set a flag to skip the prediction step
+                    use_precomputed = True
+                except Exception as e:
+                    st.warning(f"⚠️ Could not load precomputed prediction: {e}. Generating fresh prediction...")
+                    use_precomputed = False
+                    precomputed_prediction = None  # Fall through to generate fresh
+            else:
+                use_precomputed = False
+        else:
+            use_precomputed = False
         else:
             # Read PDF
             with st.spinner("Reading PDF..."):
@@ -371,16 +390,24 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                         raise
                     finally:
                         await session.close()
+            
+            try:
+                prediction = run_async(_predict())
+            except Exception as e:
+                progress_bar.empty()
+                status_text.empty()
+                detail_text.empty()
+                st.error(f"❌ Analysis failed: {str(e)}")
+                st.info("💡 **Tips:**\n- Try a shorter brief\n- Check your Google AI key\n- The API may be experiencing delays")
+                return
         
-        try:
-            prediction = run_async(_predict())
-        except Exception as e:
-            progress_bar.empty()
-            status_text.empty()
-            detail_text.empty()
-            st.error(f"❌ Analysis failed: {str(e)}")
-            st.info("💡 **Tips:**\n- Try a shorter brief\n- Check your Google AI key\n- The API may be experiencing delays")
-            return
+        # Check for fallback
+        is_fallback = prediction.model.provider == "fallback"
+        if is_fallback:
+            st.warning(f"⚠️ **FALLBACK DATA**: {prediction.overall.why}")
+        
+        # Display results
+        st.success("✅ Analysis complete!")
         
         # Check for fallback
         is_fallback = prediction.model.provider == "fallback"
