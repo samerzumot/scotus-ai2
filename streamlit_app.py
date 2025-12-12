@@ -53,7 +53,8 @@ if "session" not in st.session_state:
 # For Streamlit, we create a fresh session for each operation to avoid event loop issues
 async def get_session_async():
     """Create a new aiohttp session (must be called from async context)."""
-    timeout = aiohttp.ClientTimeout(total=45)
+    # Reduced timeout for faster failure detection
+    timeout = aiohttp.ClientTimeout(total=30, connect=10)
     return aiohttp.ClientSession(timeout=timeout)
 
 
@@ -163,11 +164,19 @@ def main():
                 corpus_path = os.getenv("HISTORICAL_CASES_PATH") or str(_ROOT / "data" / "historical_cases.jsonl")
                 retrieval_top_k = int(os.getenv("RETRIEVAL_TOP_K") or "5")
                 
-                # Predict (session will be created and closed inside async context)
+                # Predict with progress indicators
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
                 async def _predict():
                     session = await get_session_async()
                     try:
-                        return await predict_votes_and_questions(
+                        status_text.text("📚 Loading historical cases...")
+                        progress_bar.progress(10)
+                        
+                        # Add a timeout wrapper
+                        import asyncio
+                        prediction_task = predict_votes_and_questions(
                             session=session,
                             brief_text=brief_text,
                             uploader_side=uploader_side,
@@ -175,10 +184,27 @@ def main():
                             corpus_path=corpus_path,
                             retrieval_top_k=retrieval_top_k,
                         )
+                        
+                        # Run with timeout (60 seconds max)
+                        try:
+                            prediction = await asyncio.wait_for(prediction_task, timeout=60.0)
+                            progress_bar.progress(100)
+                            status_text.text("✅ Analysis complete!")
+                            return prediction
+                        except asyncio.TimeoutError:
+                            status_text.text("⏱️ Analysis timed out (>60s)")
+                            raise RuntimeError("Analysis timed out after 60 seconds. The brief may be too long or the API is slow.")
                     finally:
                         await session.close()
                 
-                prediction = run_async(_predict())
+                try:
+                    prediction = run_async(_predict())
+                except Exception as e:
+                    progress_bar.empty()
+                    status_text.empty()
+                    st.error(f"❌ Analysis failed: {str(e)}")
+                    st.info("💡 **Tips:**\n- Try a shorter brief\n- Check your Google AI key\n- The API may be experiencing delays")
+                    return
                 
                 # Check for fallback
                 is_fallback = prediction.model.provider == "fallback"
@@ -230,24 +256,46 @@ def main():
                 # Backtest
                 if transcript_url:
                     st.header("📊 Backtest Results")
-                    with st.spinner("Fetching transcript and scoring questions..."):
-                        from utils.transcripts import fetch_transcript_text
-                        from utils.google_inference import GoogleInferenceClient
-                        
-                        async def _fetch_transcript():
-                            session = await get_session_async()
-                            try:
-                                return await fetch_transcript_text(session, transcript_url=transcript_url)
-                            finally:
-                                await session.close()
-                        
+                    backtest_progress = st.progress(0)
+                    backtest_status = st.empty()
+                    
+                    async def _fetch_transcript():
+                        session = await get_session_async()
+                        try:
+                            backtest_status.text("📥 Fetching transcript...")
+                            backtest_progress.progress(20)
+                            
+                            import asyncio
+                            fetch_task = fetch_transcript_text(session, transcript_url=transcript_url)
+                            transcript = await asyncio.wait_for(fetch_task, timeout=30.0)
+                            
+                            backtest_progress.progress(50)
+                            return transcript
+                        except asyncio.TimeoutError:
+                            backtest_status.text("⏱️ Transcript fetch timed out")
+                            raise RuntimeError("Transcript fetch timed out after 30 seconds")
+                        finally:
+                            await session.close()
+                    
+                    try:
                         transcript = run_async(_fetch_transcript())
+                    except Exception as e:
+                        backtest_progress.empty()
+                        backtest_status.empty()
+                        st.warning(f"⚠️ Could not fetch transcript: {str(e)}")
+                        transcript = None
                         
-                        if transcript.get("transcript_found"):
+                        if transcript and transcript.get("transcript_found"):
+                            backtest_status.text("🔍 Extracting questions from transcript...")
+                            backtest_progress.progress(60)
+                            
                             actual_questions = extract_questions_from_transcript(
                                 transcript.get("transcript_text") or "", limit=200
                             )
                             predicted_questions = [q.question for q in prediction.questions]
+                            
+                            backtest_status.text("📊 Scoring questions...")
+                            backtest_progress.progress(80)
                             
                             # Try semantic scoring
                             google_key = os.getenv("GOOGLE_AI_KEY", "")
@@ -256,14 +304,20 @@ def main():
                             if google_key:
                                 try:
                                     google_client = GoogleInferenceClient(api_key=google_key)
-                                    score, matches, explanation = run_async(
-                                        score_predicted_questions_semantic(
+                                    
+                                    async def _score():
+                                        import asyncio
+                                        score_task = score_predicted_questions_semantic(
                                             predicted_questions,
                                             actual_questions,
                                             google_client=google_client,
                                             embed_model=embed_model,
                                         )
-                                    )
+                                        return await asyncio.wait_for(score_task, timeout=30.0)
+                                    
+                                    score, matches, explanation = run_async(_score())
+                                    backtest_progress.progress(100)
+                                    backtest_status.empty()
                                 except Exception:
                                     from utils.backtest import score_predicted_questions
                                     score, matches, explanation = score_predicted_questions(
@@ -308,7 +362,9 @@ def main():
                                             st.caption(f"📚 Citations: {', '.join(actual_citations)}")
                                         st.progress(sim, text=f"Similarity: {sim * 100:.0f}%")
                                         st.divider()
-                        else:
+                        elif transcript:
+                            backtest_progress.empty()
+                            backtest_status.empty()
                             st.warning(f"⚠️ Transcript not found at: {transcript_url}")
                 
                 # Retrieved cases
