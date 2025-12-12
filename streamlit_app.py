@@ -228,17 +228,8 @@ def main():
             else:
                 use_precomputed = False
         else:
+            # Read PDF from uploaded file
             use_precomputed = False
-            # Read PDF
-            with st.spinner("Reading PDF..."):
-                pdf_bytes = uploaded_file.read()
-                brief_text = extract_text_from_pdf_bytes(pdf_bytes, max_chars=220_000)
-                
-                if not brief_text:
-                    st.error("Could not extract text from PDF")
-                    return
-        else:
-            # Read PDF
             with st.spinner("Reading PDF..."):
                 pdf_bytes = uploaded_file.read()
                 brief_text = extract_text_from_pdf_bytes(pdf_bytes, max_chars=220_000)
