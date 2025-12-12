@@ -98,6 +98,17 @@ def _coerce_prediction(obj: Dict[str, Any], *, uploader_side: str, model_info: M
         v["justice_id"] = jid
         if "vote" not in v:
             v["vote"] = "UNCERTAIN"
+        # Normalize confidence: if > 1.0, assume it's a percentage and divide by 100
+        conf = v.get("confidence", 0.33)
+        if isinstance(conf, (int, float)):
+            if conf > 1.0:
+                v["confidence"] = float(conf) / 100.0
+            else:
+                v["confidence"] = float(conf)
+        else:
+            v["confidence"] = 0.33
+        # Clamp to [0.0, 1.0]
+        v["confidence"] = max(0.0, min(1.0, v["confidence"]))
         votes_out.append(JusticeVote.model_validate(v))
     obj["votes"] = [v.model_dump() for v in votes_out]
 
@@ -125,7 +136,17 @@ def _coerce_prediction(obj: Dict[str, Any], *, uploader_side: str, model_info: M
     if not isinstance(overall, dict):
         overall = {}
     overall.setdefault("predicted_winner", "UNCERTAIN")
-    overall.setdefault("confidence", 0.33)
+    # Normalize overall confidence: if > 1.0, assume it's a percentage and divide by 100
+    conf = overall.get("confidence", 0.33)
+    if isinstance(conf, (int, float)):
+        if conf > 1.0:
+            overall["confidence"] = float(conf) / 100.0
+        else:
+            overall["confidence"] = float(conf)
+    else:
+        overall["confidence"] = 0.33
+    # Clamp to [0.0, 1.0]
+    overall["confidence"] = max(0.0, min(1.0, overall["confidence"]))
     obj["overall"] = OverallPrediction.model_validate(overall).model_dump()
 
     return VoteQuestionPrediction.model_validate(obj)
