@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SCOTUS AI: Legal Strategist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Crimson+Text:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="header__container">
+        <div class="header__brand">
+          <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="32" height="32" rx="8" fill="url(#gradient)"/>
+              <path d="M16 8L20 14H24L18 20L20 26L16 22L12 26L14 20L8 14H12L16 8Z" fill="white" opacity="0.95"/>
+              <defs>
+                <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#1e3a8a"/>
+                  <stop offset="1" stop-color="#3b82f6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="header__text">
+            <h1 class="header__title">SCOTUS AI</h1>
+            <p class="header__subtitle">Legal Strategist & Prediction Engine</p>
+          </div>
+        </div>
+        <div class="header__badges">
+          <span class="badge badge--primary">AI-Powered</span>
+          <span class="badge">Real-Time</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Upload Section -->
+      <section class="section section--upload">
+        <div class="card card--elevated">
+          <div class="card__header">
+            <h2 class="card__title">Upload Brief</h2>
+            <p class="card__subtitle">Upload a PDF brief to receive AI-powered vote predictions and oral argument questions</p>
+          </div>
+          
+          <form id="predict-form" class="form">
+            <div class="form__group">
+              <label class="form__label">
+                <span class="form__label-text">PDF Brief</span>
+                <div class="file-upload" id="file-drop">
+                  <input id="brief" name="brief" type="file" accept="application/pdf,.pdf" class="file-upload__input" />
+                  <div class="file-upload__content">
+                    <svg class="file-upload__icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <div class="file-upload__text">
+                      <span class="file-upload__primary" id="file-name">Click to upload or drag and drop</span>
+                      <span class="file-upload__secondary">PDF file (max 10MB)</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="form__hint" id="file-hint">Supported: PDF files only</div>
+              </label>
+            </div>
+
+            <div class="form__row">
+              <div class="form__group">
+                <label class="form__label">
+                  <span class="form__label-text">Brief Side</span>
+                  <select id="side" name="side" class="form__select">
+                    <option value="UNKNOWN">Unknown</option>
+                    <option value="PETITIONER">Petitioner</option>
+                    <option value="RESPONDENT">Respondent</option>
+                    <option value="AMICUS">Amicus Curiae</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="form__group">
+                <label class="form__label">
+                  <span class="form__label-text">Case Hint <span class="form__optional">(optional)</span></span>
+                  <input id="case_hint" name="case_hint" type="text" class="form__input" placeholder="e.g., Dobbs v. Jackson (2022)" />
+                </label>
+              </div>
+            </div>
+
+            <div class="form__group">
+              <label class="form__label">
+                <span class="form__label-text">Transcript URL <span class="form__optional">(optional, for backtesting)</span></span>
+                <input id="transcript_url" name="transcript_url" type="url" class="form__input" placeholder="https://www.oyez.org/cases/..." />
+                <div class="form__hint">Auto-detected from case hint when available</div>
+              </label>
+            </div>
+
+            <div class="form__actions">
+              <button class="btn btn--primary btn--large" type="submit" id="submit-btn">
+                <span class="btn__text">Analyze Brief</span>
+                <svg class="btn__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+              <div class="status" id="status">
+                <div class="status__indicator"></div>
+                <span class="status__text">Ready</span>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Warning Banner -->
+      <div id="fallback-warning" class="alert alert--warning is-hidden">
+        <svg class="alert__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <div class="alert__content">
+          <div class="alert__title">Fallback Data Warning</div>
+          <div class="alert__message" id="fallback-message">Model not configured. Showing placeholder data.</div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div id="results" class="results is-hidden">
+        <!-- Overall Prediction -->
+        <section class="section">
+          <div class="card card--highlight">
+            <div class="card__header">
+              <h2 class="card__title">Overall Prediction</h2>
+            </div>
+            <div id="overall" class="overall-prediction">
+              <div class="overall-prediction__content">
+                <div class="overall-prediction__winner">
+                  <span class="overall-prediction__label">Predicted Winner</span>
+                  <span class="overall-prediction__value" id="overall-winner">—</span>
+                </div>
+                <div class="overall-prediction__confidence">
+                  <span class="overall-prediction__label">Confidence</span>
+                  <div class="confidence-meter">
+                    <div class="confidence-meter__bar" id="confidence-bar"></div>
+                    <span class="confidence-meter__text" id="confidence-text">—</span>
+                  </div>
+                </div>
+              </div>
+              <div class="overall-prediction__explanation" id="overall-explanation">—</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Votes and Questions Grid -->
+        <div class="grid grid--two">
+          <!-- Predicted Votes -->
+          <section class="section">
+            <div class="card">
+              <div class="card__header">
+                <h2 class="card__title">Predicted Votes</h2>
+                <p class="card__subtitle">How each Justice is likely to vote</p>
+              </div>
+              <div id="bench" class="bench-grid"></div>
+            </div>
+          </section>
+
+          <!-- Predicted Questions -->
+          <section class="section">
+            <div class="card">
+              <div class="card__header">
+                <h2 class="card__title">Predicted Questions</h2>
+                <p class="card__subtitle">Likely oral argument questions by Justice</p>
+              </div>
+              <div id="questions" class="questions-list"></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Backtest and Retrieval Grid -->
+        <div class="grid grid--two">
+          <!-- Backtest Results -->
+          <section class="section">
+            <div class="card">
+              <div class="card__header">
+                <h2 class="card__title">Backtest Results</h2>
+                <p class="card__subtitle">Predicted vs. actual transcript questions</p>
+              </div>
+              <div id="backtest" class="backtest-results">—</div>
+            </div>
+          </section>
+
+          <!-- Retrieved Cases -->
+          <section class="section">
+            <div class="card">
+              <div class="card__header">
+                <h2 class="card__title">Similar Historical Cases</h2>
+                <p class="card__subtitle">Retrieved from corpus for context</p>
+              </div>
+              <div id="retrieval" class="retrieval-list">—</div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Loading Skeleton -->
+      <div id="skeleton" class="skeleton is-hidden">
+        <div class="skeleton__card">
+          <div class="skeleton__line skeleton__line--title"></div>
+          <div class="skeleton__line"></div>
+          <div class="skeleton__line skeleton__line--short"></div>
+        </div>
+        <div class="skeleton__card">
+          <div class="skeleton__line skeleton__line--title"></div>
+          <div class="skeleton__grid">
+            <div class="skeleton__item"></div>
+            <div class="skeleton__item"></div>
+            <div class="skeleton__item"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast is-hidden">
+      <div class="toast__content">
+        <svg class="toast__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span class="toast__message"></span>
+      </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

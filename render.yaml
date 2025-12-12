@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: scotus-ai
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: hypercorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: GOOGLE_AI_KEY
+        sync: false
+      - key: GOOGLE_PREDICT_MODEL
+        value: models/gemini-2.5-pro
+      - key: GOOGLE_EMBED_MODEL
+        value: models/text-embedding-004
+      - key: APP_ENV
+        value: production
+

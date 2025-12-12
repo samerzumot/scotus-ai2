@@ -1,0 +1,17 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env.local
+.env
+.git
+.gitignore
+*.md
+docs/
+hotrun.py
+hotreload.token
+Makefile
+.streamlit
+

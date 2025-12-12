@@ -1,0 +1,9 @@
+# Streamlit deployment requirements
+streamlit>=1.28.0
+aiohttp==3.10.10
+python-dotenv==1.0.1
+PyPDF2==3.0.1
+pydantic==2.12.5
+beautifulsoup4==4.12.3
+google-generativeai>=0.8.3
+
