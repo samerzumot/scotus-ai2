@@ -95,70 +95,70 @@ async def score_predicted_questions_semantic(
         # Embed all questions
         predicted_embeddings = []
         actual_embeddings = []
+        
+        for pq in predicted:
+            try:
+                emb = await google_client.embed_text(model=embed_model, text=pq[:500])
+                predicted_embeddings.append(emb)
+            except Exception:
+                predicted_embeddings.append(None)
+        
+        for aq in actual:
+            try:
+                emb = await google_client.embed_text(model=embed_model, text=aq[:500])
+                actual_embeddings.append(emb)
+            except Exception:
+                actual_embeddings.append(None)
+        
+        # Compute semantic similarities
+        matches: List[Dict[str, Any]] = []
+        sims: List[float] = []
+        
+        for i, pq in enumerate(predicted):
+            pred_emb = predicted_embeddings[i] if i < len(predicted_embeddings) else None
+            best_a = ""
+            best_s = 0.0
             
-            for pq in predicted:
-                try:
-                    emb = await google_client.embed_text(model=embed_model, text=pq[:500])
-                    predicted_embeddings.append(emb)
-                except Exception:
-                    predicted_embeddings.append(None)
+            # Get justice info if available
+            justice_id = ""
+            justice_name = ""
+            if predicted_with_justice and i < len(predicted_with_justice):
+                _, justice_id, justice_name = predicted_with_justice[i]
             
-            for aq in actual:
-                try:
-                    emb = await google_client.embed_text(model=embed_model, text=aq[:500])
-                    actual_embeddings.append(emb)
-                except Exception:
-                    actual_embeddings.append(None)
-            
-            # Compute semantic similarities
-            matches: List[Dict[str, Any]] = []
-            sims: List[float] = []
-            
-            for i, pq in enumerate(predicted):
-                pred_emb = predicted_embeddings[i] if i < len(predicted_embeddings) else None
-                best_a = ""
-                best_s = 0.0
+            for j, aq in enumerate(actual):
+                actual_emb = actual_embeddings[j] if j < len(actual_embeddings) else None
                 
-                # Get justice info if available
-                justice_id = ""
-                justice_name = ""
-                if predicted_with_justice and i < len(predicted_with_justice):
-                    _, justice_id, justice_name = predicted_with_justice[i]
+                if pred_emb and actual_emb:
+                    # Use semantic similarity
+                    s = cosine_similarity(pred_emb, actual_emb)
+                else:
+                    # If embedding failed, skip this question (don't fallback to lexical)
+                    continue
                 
-                for j, aq in enumerate(actual):
-                    actual_emb = actual_embeddings[j] if j < len(actual_embeddings) else None
-                    
-                    if pred_emb and actual_emb:
-                        # Use semantic similarity
-                        s = cosine_similarity(pred_emb, actual_emb)
-                    else:
-                        # Fallback to lexical
-                        s = jaccard_similarity(pq, aq)
-                    
-                    if s > best_s:
-                        best_s = s
-                        best_a = aq
-                
-                sims.append(best_s)
-                
-                # Extract citations
-                from utils.citations import extract_case_citations
-                pred_citations = extract_case_citations(pq)
-                actual_citations = extract_case_citations(best_a)
-                
-                matches.append({
-                    "predicted": pq,
-                    "best_actual": best_a,
-                    "similarity": float(best_s),
-                    "justice_id": justice_id,
-                    "justice_name": justice_name,
-                    "predicted_citations": pred_citations,
-                    "actual_citations": actual_citations,
-                })
+                if s > best_s:
+                    best_s = s
+                    best_a = aq
             
-            score = int(round(100.0 * (sum(sims) / max(1, len(sims)))))
-            matches.sort(key=lambda t: t.get("similarity", 0.0), reverse=True)
+            sims.append(best_s)
             
+            # Extract citations
+            from utils.citations import extract_case_citations
+            pred_citations = extract_case_citations(pq)
+            actual_citations = extract_case_citations(best_a)
+            
+            matches.append({
+                "predicted": pq,
+                "best_actual": best_a,
+                "similarity": float(best_s),
+                "justice_id": justice_id,
+                "justice_name": justice_name,
+                "predicted_citations": pred_citations,
+                "actual_citations": actual_citations,
+            })
+        
+        score = int(round(100.0 * (sum(sims) / max(1, len(sims)))))
+        matches.sort(key=lambda t: t.get("similarity", 0.0), reverse=True)
+        
         explanation = _generate_backtest_explanation(score, len(predicted), len(actual), matches, semantic=True)
         return score, matches, explanation
         
