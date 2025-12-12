@@ -246,15 +246,11 @@ def main():
                         if vote.rationale:
                             st.caption(vote.rationale)
                 
-                # Questions
-                st.header("❓ Predicted Questions")
-                for question in prediction.questions:
-                    with st.expander(f"**{question.justice_name}**"):
-                        st.markdown(f"**Question:** {question.question}")
-                        if question.what_it_tests:
-                            st.caption(f"*What it tests:* {question.what_it_tests}")
+                # Run backtest first if transcript is available (to get matches for questions)
+                matches_dict = {}  # Map predicted question text to match info
+                backtest_score = None
+                backtest_explanation = None
                 
-                # Backtest
                 if transcript_url:
                     st.header("📊 Backtest Results")
                     backtest_progress = st.progress(0)
@@ -324,11 +320,34 @@ def main():
                                     score, matches, explanation = score_predicted_questions(
                                         predicted_questions, actual_questions
                                     )
+                                    backtest_progress.progress(100)
+                                    backtest_status.empty()
                             else:
                                 from utils.backtest import score_predicted_questions
                                 score, matches, explanation = score_predicted_questions(
                                     predicted_questions, actual_questions
                                 )
+                                backtest_progress.progress(100)
+                                backtest_status.empty()
+                            
+                            # Store backtest results
+                            backtest_score = score
+                            backtest_explanation = explanation
+                            
+                            # Create mapping from predicted question to match info
+                            for m in matches:
+                                if isinstance(m, dict):
+                                    pred_q = m.get("predicted", "")
+                                    if pred_q:
+                                        matches_dict[pred_q] = m
+                                else:
+                                    # Tuple format (legacy)
+                                    pred_q = m[0] if len(m) > 0 else ""
+                                    if pred_q:
+                                        matches_dict[pred_q] = {
+                                            "best_actual": m[1] if len(m) > 1 else "",
+                                            "similarity": m[2] if len(m) > 2 else 0.0,
+                                        }
                             
                             st.metric("Question Match Score", f"{score}%")
                             st.markdown(explanation)
@@ -367,6 +386,63 @@ def main():
                             backtest_progress.empty()
                             backtest_status.empty()
                             st.warning(f"⚠️ Transcript not found at: {transcript_url}")
+                
+                # Questions with matches
+                st.header("❓ Predicted Questions")
+                for question in prediction.questions:
+                    match_info = matches_dict.get(question.question, None)
+                    
+                    # Build expander title
+                    title = f"**{question.justice_name}**"
+                    if match_info:
+                        sim = match_info.get("similarity", 0.0) if isinstance(match_info, dict) else 0.0
+                        title += f" ({sim * 100:.0f}% match)"
+                    
+                    with st.expander(title):
+                        st.markdown(f"**Predicted Question:** {question.question}")
+                        
+                        # Show matching actual question if available
+                        if match_info:
+                            if isinstance(match_info, dict):
+                                best_actual = match_info.get("best_actual", "")
+                                similarity = match_info.get("similarity", 0.0)
+                                actual_citations = match_info.get("actual_citations", [])
+                                
+                                if best_actual:
+                                    st.divider()
+                                    st.markdown("**📋 Best Matching Actual Question:**")
+                                    st.markdown(f"{best_actual}")
+                                    if actual_citations:
+                                        st.caption(f"📚 Citations: {', '.join(actual_citations)}")
+                                    st.progress(similarity, text=f"Similarity: {similarity * 100:.0f}%")
+                        
+                        if question.what_it_tests:
+                            st.divider()
+                            st.caption(f"*What it tests:* {question.what_it_tests}")
+                
+                # Backtest summary (if available)
+                if backtest_score is not None:
+                    st.header("📊 Backtest Summary")
+                    st.metric("Question Match Score", f"{backtest_score}%")
+                    if backtest_explanation:
+                        st.markdown(backtest_explanation)
+                    
+                    # Show top matches in detail
+                    if matches_dict:
+                        with st.expander("📋 All Question Matches"):
+                            for m in list(matches_dict.values())[:10]:
+                                if isinstance(m, dict):
+                                    pred_q = m.get("predicted", "")
+                                    actual_q = m.get("best_actual", "")
+                                    sim = m.get("similarity", 0.0)
+                                    justice_name = m.get("justice_name", "")
+                                    
+                                    if pred_q and actual_q:
+                                        st.markdown(f"**{justice_name if justice_name else 'Question'}**")
+                                        st.markdown(f"*Predicted:* {pred_q}")
+                                        st.markdown(f"*Actual:* {actual_q}")
+                                        st.progress(sim, text=f"Similarity: {sim * 100:.0f}%")
+                                        st.divider()
                 
                 # Retrieved cases
                 if prediction.retrieved_cases:
