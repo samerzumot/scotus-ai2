@@ -224,12 +224,12 @@ def main():
         corpus_path = os.getenv("HISTORICAL_CASES_PATH") or str(_ROOT / "data" / "historical_cases.jsonl")
         retrieval_top_k = int(os.getenv("RETRIEVAL_TOP_K") or "5")
         
+        # Predict with detailed progress indicators
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        detail_text = st.empty()
+        
         try:
-                
-                # Predict with detailed progress indicators
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                detail_text = st.empty()
                 
                 async def _predict():
                     session = await get_session_async()
@@ -633,9 +633,9 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                             st.caption(f"Tags: {', '.join(case.tags)}")
                         st.divider()
                 
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-                st.exception(e)
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+                    st.exception(e)
 
 
 if __name__ == "__main__":
