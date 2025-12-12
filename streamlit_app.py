@@ -229,9 +229,7 @@ def main():
         status_text = st.empty()
         detail_text = st.empty()
         
-        try:
-                
-                async def _predict():
+        async def _predict():
                     session = await get_session_async()
                     try:
                         import asyncio
@@ -382,53 +380,53 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                     st.error(f"❌ Analysis failed: {str(e)}")
                     st.info("💡 **Tips:**\n- Try a shorter brief\n- Check your Google AI key\n- The API may be experiencing delays")
                     return
-                
-                # Check for fallback
-                is_fallback = prediction.model.provider == "fallback"
-                if is_fallback:
-                    st.warning(f"⚠️ **FALLBACK DATA**: {prediction.overall.why}")
-                
-                # Display results
-                st.success("✅ Analysis complete!")
-                
-                # Overall prediction
-                st.header("🎯 Overall Prediction")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Predicted Winner", prediction.overall.predicted_winner)
-                with col2:
-                    st.metric("Confidence", f"{prediction.overall.confidence * 100:.0f}%")
-                with col3:
-                    if prediction.overall.swing_justice:
-                        st.metric("Swing Justice", prediction.overall.swing_justice)
-                
-                if prediction.overall.why:
-                    st.info(prediction.overall.why)
-                
-                # Votes
-                st.header("👨‍⚖️ Predicted Votes")
-                vote_cols = st.columns(3)
-                for idx, vote in enumerate(prediction.votes):
-                    col_idx = idx % 3
-                    with vote_cols[col_idx]:
-                        vote_color = {
-                            "PETITIONER": "🟦",
-                            "RESPONDENT": "🟥",
-                            "UNCERTAIN": "🟨"
-                        }.get(vote.vote, "⚪")
-                        st.markdown(f"**{vote.justice_name}**")
-                        st.markdown(f"{vote_color} {vote.vote}")
-                        st.caption(f"Confidence: {vote.confidence * 100:.0f}%")
-                        if vote.rationale:
-                            st.caption(vote.rationale)
-                
-                # Run backtest first if transcript is available (to get matches for questions)
-                matches_dict = {}  # Map predicted question text to match info
-                backtest_score = None
-                backtest_explanation = None
-                
-                if transcript_url:
-                    st.header("📊 Backtest Results")
+        
+        # Check for fallback
+        is_fallback = prediction.model.provider == "fallback"
+        if is_fallback:
+            st.warning(f"⚠️ **FALLBACK DATA**: {prediction.overall.why}")
+        
+        # Display results
+        st.success("✅ Analysis complete!")
+        
+        # Overall prediction
+        st.header("🎯 Overall Prediction")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Predicted Winner", prediction.overall.predicted_winner)
+        with col2:
+            st.metric("Confidence", f"{prediction.overall.confidence * 100:.0f}%")
+        with col3:
+            if prediction.overall.swing_justice:
+                st.metric("Swing Justice", prediction.overall.swing_justice)
+        
+        if prediction.overall.why:
+            st.info(prediction.overall.why)
+        
+        # Votes
+        st.header("👨‍⚖️ Predicted Votes")
+        vote_cols = st.columns(3)
+        for idx, vote in enumerate(prediction.votes):
+            col_idx = idx % 3
+            with vote_cols[col_idx]:
+                vote_color = {
+                    "PETITIONER": "🟦",
+                    "RESPONDENT": "🟥",
+                    "UNCERTAIN": "🟨"
+                }.get(vote.vote, "⚪")
+                st.markdown(f"**{vote.justice_name}**")
+                st.markdown(f"{vote_color} {vote.vote}")
+                st.caption(f"Confidence: {vote.confidence * 100:.0f}%")
+                if vote.rationale:
+                    st.caption(vote.rationale)
+        
+        # Run backtest first if transcript is available (to get matches for questions)
+        matches_dict = {}  # Map predicted question text to match info
+        backtest_score = None
+        backtest_explanation = None
+        
+        if transcript_url:
+            st.header("📊 Backtest Results")
                     backtest_progress = st.progress(0)
                     backtest_status = st.empty()
                     
@@ -632,10 +630,6 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                         if case.tags:
                             st.caption(f"Tags: {', '.join(case.tags)}")
                         st.divider()
-                
-                except Exception as e:
-                    st.error(f"❌ Error: {str(e)}")
-                    st.exception(e)
 
 
 if __name__ == "__main__":
