@@ -163,17 +163,20 @@ def main():
                 corpus_path = os.getenv("HISTORICAL_CASES_PATH") or str(_ROOT / "data" / "historical_cases.jsonl")
                 retrieval_top_k = int(os.getenv("RETRIEVAL_TOP_K") or "5")
                 
-                # Predict (session will be created inside async context)
+                # Predict (session will be created and closed inside async context)
                 async def _predict():
                     session = await get_session_async()
-                    return await predict_votes_and_questions(
-                        session=session,
-                        brief_text=brief_text,
-                        uploader_side=uploader_side,
-                        case_hint=case_hint,
-                        corpus_path=corpus_path,
-                        retrieval_top_k=retrieval_top_k,
-                    )
+                    try:
+                        return await predict_votes_and_questions(
+                            session=session,
+                            brief_text=brief_text,
+                            uploader_side=uploader_side,
+                            case_hint=case_hint,
+                            corpus_path=corpus_path,
+                            retrieval_top_k=retrieval_top_k,
+                        )
+                    finally:
+                        await session.close()
                 
                 prediction = run_async(_predict())
                 
