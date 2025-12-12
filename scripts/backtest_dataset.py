@@ -109,7 +109,7 @@ async def main_async() -> int:
                 transcript_text = rec.transcript_text
                 transcript_url = rec.transcript_url
                 if not transcript_text and transcript_url:
-                    tr = await fetch_transcript_text(session, transcript_url=transcript_url)
+                    tr = await fetch_transcript_text(session, transcript_url=transcript_url, use_cache=True)
                     transcript_text = tr.get("transcript_text") or ""
 
                 actual_questions = extract_questions_from_transcript(transcript_text, limit=250)

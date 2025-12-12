@@ -164,7 +164,7 @@ async def predict():
         # If we have a transcript URL, fetch it in parallel while the model runs
         transcript_task = None
         if transcript_url:
-            transcript_task = asyncio.create_task(fetch_transcript_text(_session(), transcript_url=transcript_url))
+            transcript_task = asyncio.create_task(fetch_transcript_text(_session(), transcript_url=transcript_url, use_cache=True))
 
         prediction = await predict_votes_and_questions(
             session=_session(),
@@ -202,14 +202,14 @@ async def predict():
             
             # Start fetching if we just found it
             if transcript_url and transcript_task is None:
-                transcript_task = asyncio.create_task(fetch_transcript_text(_session(), transcript_url=transcript_url))
+                transcript_task = asyncio.create_task(fetch_transcript_text(_session(), transcript_url=transcript_url, use_cache=True))
 
         # Auto-run backtest if transcript URL is available (auto-detected or provided)
         backtest_obj: Optional[BacktestResult] = None
         if transcript_url:
             # If we haven't started fetching yet, do it now
             if transcript_task is None:
-                transcript_task = asyncio.create_task(fetch_transcript_text(_session(), transcript_url=transcript_url))
+                transcript_task = asyncio.create_task(fetch_transcript_text(_session(), transcript_url=transcript_url, use_cache=True))
             
             transcript = await transcript_task
             transcript_found = bool(transcript.get("transcript_found"))
