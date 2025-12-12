@@ -7,7 +7,7 @@ from typing import List
 from PyPDF2 import PdfReader
 
 
-def extract_text_from_pdf_bytes(pdf_bytes: bytes, *, max_chars: int = 220_000) -> str:
+def extract_text_from_pdf_bytes(pdf_bytes: bytes, *, max_chars: int = 100_000) -> str:
     """
     Deterministic PDF text extraction.
     Keeps it simple and bounded to protect latency and prompt length.
