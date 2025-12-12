@@ -224,35 +224,16 @@ async def predict():
                 google_key = (os.getenv("GOOGLE_AI_KEY") or "").strip()
                 embed_model = (os.getenv("GOOGLE_EMBED_MODEL") or "").strip() or "models/text-embedding-004"
                 
-                if google_key:
-                    try:
-                        from utils.google_inference import GoogleInferenceClient
-                        google_client = GoogleInferenceClient(api_key=google_key)
-                        score, matches, explanation = await score_predicted_questions_semantic(
-                            predicted_questions,
-                            actual_questions,
-                            google_client=google_client,
-                            embed_model=embed_model,
-                            predicted_with_justice=predicted_questions_with_justice,
-                        )
-                    except Exception as e:
-                        # Fallback to lexical if semantic fails - log warning
-                        import sys
-                        print(f"⚠️ WARNING: Semantic backtest scoring failed, using lexical similarity: {e}", file=sys.stderr)
-                        score, matches, explanation = score_predicted_questions(
-                            predicted_questions,
-                            actual_questions,
-                            predicted_with_justice=predicted_questions_with_justice,
-                        )
-                        # Add warning to explanation
-                        explanation = f"⚠️ **Note:** Semantic similarity unavailable, using lexical matching.\n\n{explanation}"
+                if not google_key:
+                    score, matches, explanation = 0, [], "⚠️ Backtest requires GOOGLE_AI_KEY for semantic similarity. Please configure it in env.local."
                 else:
-                    # Use lexical similarity if no Google key - log warning
-                    import sys
-                    print("⚠️ WARNING: GOOGLE_AI_KEY not set, using lexical similarity for backtest (less accurate). Set GOOGLE_AI_KEY for semantic matching.", file=sys.stderr)
-                    score, matches, explanation = score_predicted_questions(
+                    from utils.google_inference import GoogleInferenceClient
+                    google_client = GoogleInferenceClient(api_key=google_key)
+                    score, matches, explanation = await score_predicted_questions_semantic(
                         predicted_questions,
                         actual_questions,
+                        google_client=google_client,
+                        embed_model=embed_model,
                         predicted_with_justice=predicted_questions_with_justice,
                     )
                     # Add warning to explanation

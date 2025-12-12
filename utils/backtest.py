@@ -92,9 +92,9 @@ async def score_predicted_questions_semantic(
         return 0, [], explanation
     
     try:
-            # Embed all questions
-            predicted_embeddings = []
-            actual_embeddings = []
+        # Embed all questions
+        predicted_embeddings = []
+        actual_embeddings = []
             
             for pq in predicted:
                 try:
