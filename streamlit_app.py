@@ -371,15 +371,16 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                         raise
                     finally:
                         await session.close()
-                
-                try:
-                    prediction = run_async(_predict())
-                except Exception as e:
-                    progress_bar.empty()
-                    status_text.empty()
-                    st.error(f"❌ Analysis failed: {str(e)}")
-                    st.info("💡 **Tips:**\n- Try a shorter brief\n- Check your Google AI key\n- The API may be experiencing delays")
-                    return
+        
+        try:
+            prediction = run_async(_predict())
+        except Exception as e:
+            progress_bar.empty()
+            status_text.empty()
+            detail_text.empty()
+            st.error(f"❌ Analysis failed: {str(e)}")
+            st.info("💡 **Tips:**\n- Try a shorter brief\n- Check your Google AI key\n- The API may be experiencing delays")
+            return
         
         # Check for fallback
         is_fallback = prediction.model.provider == "fallback"
@@ -427,8 +428,8 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         
         if transcript_url:
             st.header("📊 Backtest Results")
-                    backtest_progress = st.progress(0)
-                    backtest_status = st.empty()
+            backtest_progress = st.progress(0)
+            backtest_status = st.empty()
                     
                     async def _fetch_transcript():
                         session = await get_session_async()
@@ -458,178 +459,178 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                         transcript = None
                         
                         if transcript and transcript.get("transcript_found"):
-                            backtest_status.text("🔍 Extracting questions from transcript...")
-                            backtest_progress.progress(60)
-                            
-                            # Extract questions (limit to 100 for faster processing)
-                            actual_questions = extract_questions_from_transcript(
-                                transcript.get("transcript_text") or "", limit=100
+                backtest_status.text("🔍 Extracting questions from transcript...")
+                backtest_progress.progress(60)
+                
+                # Extract questions (limit to 100 for faster processing)
+                actual_questions = extract_questions_from_transcript(
+                    transcript.get("transcript_text") or "", limit=100
+                )
+                predicted_questions = [q.question for q in prediction.questions]
+                
+                backtest_status.text("📊 Scoring questions...")
+                backtest_progress.progress(80)
+                
+                # Try semantic scoring
+                google_key = os.getenv("GOOGLE_AI_KEY", "")
+                embed_model = os.getenv("GOOGLE_EMBED_MODEL", "models/text-embedding-004")
+                
+                if google_key:
+                    try:
+                        google_client = GoogleInferenceClient(api_key=google_key)
+                        
+                        async def _score():
+                            import asyncio
+                            score_task = score_predicted_questions_semantic(
+                                predicted_questions,
+                                actual_questions,
+                                google_client=google_client,
+                                embed_model=embed_model,
                             )
-                            predicted_questions = [q.question for q in prediction.questions]
-                            
-                            backtest_status.text("📊 Scoring questions...")
-                            backtest_progress.progress(80)
-                            
-                            # Try semantic scoring
-                            google_key = os.getenv("GOOGLE_AI_KEY", "")
-                            embed_model = os.getenv("GOOGLE_EMBED_MODEL", "models/text-embedding-004")
-                            
-                            if google_key:
-                                try:
-                                    google_client = GoogleInferenceClient(api_key=google_key)
-                                    
-                                    async def _score():
-                                        import asyncio
-                                        score_task = score_predicted_questions_semantic(
-                                            predicted_questions,
-                                            actual_questions,
-                                            google_client=google_client,
-                                            embed_model=embed_model,
-                                        )
-                                        return await asyncio.wait_for(score_task, timeout=30.0)
-                                    
-                                    score, matches, explanation = run_async(_score())
-                                    backtest_progress.progress(100)
-                                    backtest_status.empty()
-                                except Exception:
-                                    from utils.backtest import score_predicted_questions
-                                    score, matches, explanation = score_predicted_questions(
-                                        predicted_questions, actual_questions
-                                    )
-                                    backtest_progress.progress(100)
-                                    backtest_status.empty()
+                            return await asyncio.wait_for(score_task, timeout=30.0)
+                        
+                        score, matches, explanation = run_async(_score())
+                        backtest_progress.progress(100)
+                        backtest_status.empty()
+                    except Exception:
+                        from utils.backtest import score_predicted_questions
+                        score, matches, explanation = score_predicted_questions(
+                            predicted_questions, actual_questions
+                        )
+                        backtest_progress.progress(100)
+                        backtest_status.empty()
+                else:
+                    from utils.backtest import score_predicted_questions
+                    score, matches, explanation = score_predicted_questions(
+                        predicted_questions, actual_questions
+                    )
+                    backtest_progress.progress(100)
+                    backtest_status.empty()
+                
+                # Store backtest results
+                backtest_score = score
+                backtest_explanation = explanation
+                
+                # Create mapping from predicted question to match info
+                for m in matches:
+                    if isinstance(m, dict):
+                        pred_q = m.get("predicted", "")
+                        if pred_q:
+                            matches_dict[pred_q] = m
+                    else:
+                        # Tuple format (legacy)
+                        pred_q = m[0] if len(m) > 0 else ""
+                        if pred_q:
+                            matches_dict[pred_q] = {
+                                "best_actual": m[1] if len(m) > 1 else "",
+                                "similarity": m[2] if len(m) > 2 else 0.0,
+                            }
+                
+                st.metric("Question Match Score", f"{score}%")
+                st.markdown(explanation)
+                
+                # Show top matches
+                if matches:
+                    with st.expander("Top Question Matches"):
+                        for m in matches[:5]:
+                            # Handle both dict and tuple formats for backward compatibility
+                            if isinstance(m, dict):
+                                pred_q = m.get("predicted", "")
+                                actual_q = m.get("best_actual", "")
+                                sim = m.get("similarity", 0.0)
+                                justice_name = m.get("justice_name", "")
+                                pred_citations = m.get("predicted_citations", [])
+                                actual_citations = m.get("actual_citations", [])
                             else:
-                                from utils.backtest import score_predicted_questions
-                                score, matches, explanation = score_predicted_questions(
-                                    predicted_questions, actual_questions
-                                )
-                                backtest_progress.progress(100)
-                                backtest_status.empty()
+                                # Tuple format (legacy)
+                                pred_q, actual_q, sim = m if len(m) >= 3 else (m[0] if len(m) > 0 else "", m[1] if len(m) > 1 else "", 0.0)
+                                justice_name = ""
+                                pred_citations = []
+                                actual_citations = []
                             
-                            # Store backtest results
-                            backtest_score = score
-                            backtest_explanation = explanation
-                            
-                            # Create mapping from predicted question to match info
-                            for m in matches:
-                                if isinstance(m, dict):
-                                    pred_q = m.get("predicted", "")
-                                    if pred_q:
-                                        matches_dict[pred_q] = m
-                                else:
-                                    # Tuple format (legacy)
-                                    pred_q = m[0] if len(m) > 0 else ""
-                                    if pred_q:
-                                        matches_dict[pred_q] = {
-                                            "best_actual": m[1] if len(m) > 1 else "",
-                                            "similarity": m[2] if len(m) > 2 else 0.0,
-                                        }
-                            
-                            st.metric("Question Match Score", f"{score}%")
-                            st.markdown(explanation)
-                            
-                            # Show top matches
-                            if matches:
-                                with st.expander("Top Question Matches"):
-                                    for m in matches[:5]:
-                                        # Handle both dict and tuple formats for backward compatibility
-                                        if isinstance(m, dict):
-                                            pred_q = m.get("predicted", "")
-                                            actual_q = m.get("best_actual", "")
-                                            sim = m.get("similarity", 0.0)
-                                            justice_name = m.get("justice_name", "")
-                                            pred_citations = m.get("predicted_citations", [])
-                                            actual_citations = m.get("actual_citations", [])
-                                        else:
-                                            # Tuple format (legacy)
-                                            pred_q, actual_q, sim = m if len(m) >= 3 else (m[0] if len(m) > 0 else "", m[1] if len(m) > 1 else "", 0.0)
-                                            justice_name = ""
-                                            pred_citations = []
-                                            actual_citations = []
-                                        
-                                        # Display justice name if available
-                                        if justice_name:
-                                            st.markdown(f"**Justice {justice_name}**")
-                                        st.markdown(f"**Predicted:** {pred_q}")
-                                        if pred_citations:
-                                            st.caption(f"📚 Citations: {', '.join(pred_citations)}")
-                                        st.markdown(f"**Best Actual Match:** {actual_q}")
-                                        if actual_citations:
-                                            st.caption(f"📚 Citations: {', '.join(actual_citations)}")
-                                        st.progress(sim, text=f"Similarity: {sim * 100:.0f}%")
-                                        st.divider()
-                        elif transcript:
-                            backtest_progress.empty()
-                            backtest_status.empty()
-                            st.warning(f"⚠️ Transcript not found at: {transcript_url}")
-                
-                # Questions with matches
-                st.header("❓ Predicted Questions")
-                for question in prediction.questions:
-                    match_info = matches_dict.get(question.question, None)
-                    
-                    # Build expander title
-                    title = f"**{question.justice_name}**"
-                    if match_info:
-                        sim = match_info.get("similarity", 0.0) if isinstance(match_info, dict) else 0.0
-                        title += f" ({sim * 100:.0f}% match)"
-                    
-                    with st.expander(title):
-                        st.markdown(f"**Predicted Question:** {question.question}")
-                        
-                        # Show matching actual question if available
-                        if match_info:
-                            if isinstance(match_info, dict):
-                                best_actual = match_info.get("best_actual", "")
-                                similarity = match_info.get("similarity", 0.0)
-                                actual_citations = match_info.get("actual_citations", [])
-                                
-                                if best_actual:
-                                    st.divider()
-                                    st.markdown("**📋 Best Matching Actual Question:**")
-                                    st.markdown(f"{best_actual}")
-                                    if actual_citations:
-                                        st.caption(f"📚 Citations: {', '.join(actual_citations)}")
-                                    st.progress(similarity, text=f"Similarity: {similarity * 100:.0f}%")
-                        
-                        if question.what_it_tests:
+                            # Display justice name if available
+                            if justice_name:
+                                st.markdown(f"**Justice {justice_name}**")
+                            st.markdown(f"**Predicted:** {pred_q}")
+                            if pred_citations:
+                                st.caption(f"📚 Citations: {', '.join(pred_citations)}")
+                            st.markdown(f"**Best Actual Match:** {actual_q}")
+                            if actual_citations:
+                                st.caption(f"📚 Citations: {', '.join(actual_citations)}")
+                            st.progress(sim, text=f"Similarity: {sim * 100:.0f}%")
                             st.divider()
-                            st.caption(f"*What it tests:* {question.what_it_tests}")
+            elif transcript:
+                backtest_progress.empty()
+                backtest_status.empty()
+                st.warning(f"⚠️ Transcript not found at: {transcript_url}")
+        
+        # Questions with matches
+        st.header("❓ Predicted Questions")
+        for question in prediction.questions:
+            match_info = matches_dict.get(question.question, None)
+            
+            # Build expander title
+            title = f"**{question.justice_name}**"
+            if match_info:
+                sim = match_info.get("similarity", 0.0) if isinstance(match_info, dict) else 0.0
+                title += f" ({sim * 100:.0f}% match)"
+            
+            with st.expander(title):
+                st.markdown(f"**Predicted Question:** {question.question}")
                 
-                # Backtest summary (if available)
-                if backtest_score is not None:
-                    st.header("📊 Backtest Summary")
-                    st.metric("Question Match Score", f"{backtest_score}%")
-                    if backtest_explanation:
-                        st.markdown(backtest_explanation)
-                    
-                    # Show top matches in detail
-                    if matches_dict:
-                        with st.expander("📋 All Question Matches"):
-                            for m in list(matches_dict.values())[:10]:
-                                if isinstance(m, dict):
-                                    pred_q = m.get("predicted", "")
-                                    actual_q = m.get("best_actual", "")
-                                    sim = m.get("similarity", 0.0)
-                                    justice_name = m.get("justice_name", "")
-                                    
-                                    if pred_q and actual_q:
-                                        st.markdown(f"**{justice_name if justice_name else 'Question'}**")
-                                        st.markdown(f"*Predicted:* {pred_q}")
-                                        st.markdown(f"*Actual:* {actual_q}")
-                                        st.progress(sim, text=f"Similarity: {sim * 100:.0f}%")
-                                        st.divider()
+                # Show matching actual question if available
+                if match_info:
+                    if isinstance(match_info, dict):
+                        best_actual = match_info.get("best_actual", "")
+                        similarity = match_info.get("similarity", 0.0)
+                        actual_citations = match_info.get("actual_citations", [])
+                        
+                        if best_actual:
+                            st.divider()
+                            st.markdown("**📋 Best Matching Actual Question:**")
+                            st.markdown(f"{best_actual}")
+                            if actual_citations:
+                                st.caption(f"📚 Citations: {', '.join(actual_citations)}")
+                            st.progress(similarity, text=f"Similarity: {similarity * 100:.0f}%")
                 
-                # Retrieved cases
-                if prediction.retrieved_cases:
-                    st.header("📚 Similar Historical Cases")
-                    for case in prediction.retrieved_cases:
-                        st.markdown(f"**{case.case_name}**")
-                        if case.term:
-                            st.caption(f"Term {case.term}")
-                        if case.tags:
-                            st.caption(f"Tags: {', '.join(case.tags)}")
-                        st.divider()
+                if question.what_it_tests:
+                    st.divider()
+                    st.caption(f"*What it tests:* {question.what_it_tests}")
+        
+        # Backtest summary (if available)
+        if backtest_score is not None:
+            st.header("📊 Backtest Summary")
+            st.metric("Question Match Score", f"{backtest_score}%")
+            if backtest_explanation:
+                st.markdown(backtest_explanation)
+            
+            # Show top matches in detail
+            if matches_dict:
+                with st.expander("📋 All Question Matches"):
+                    for m in list(matches_dict.values())[:10]:
+                        if isinstance(m, dict):
+                            pred_q = m.get("predicted", "")
+                            actual_q = m.get("best_actual", "")
+                            sim = m.get("similarity", 0.0)
+                            justice_name = m.get("justice_name", "")
+                            
+                            if pred_q and actual_q:
+                                st.markdown(f"**{justice_name if justice_name else 'Question'}**")
+                                st.markdown(f"*Predicted:* {pred_q}")
+                                st.markdown(f"*Actual:* {actual_q}")
+                                st.progress(sim, text=f"Similarity: {sim * 100:.0f}%")
+                                st.divider()
+        
+        # Retrieved cases
+        if prediction.retrieved_cases:
+            st.header("📚 Similar Historical Cases")
+            for case in prediction.retrieved_cases:
+                st.markdown(f"**{case.case_name}**")
+                if case.term:
+                    st.caption(f"Term {case.term}")
+                if case.tags:
+                    st.caption(f"Tags: {', '.join(case.tags)}")
+                st.divider()
 
 
 if __name__ == "__main__":
