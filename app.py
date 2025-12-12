@@ -247,8 +247,6 @@ async def predict():
                         embed_model=embed_model,
                         predicted_with_justice=predicted_questions_with_justice,
                     )
-                    # Add warning to explanation
-                    explanation = f"⚠️ **Note:** Using lexical similarity (word overlap) instead of semantic matching. Set GOOGLE_AI_KEY for better topic-based scoring.\n\n{explanation}"
                 # Convert enhanced matches to QuestionBacktestMatch objects
                 from utils.schemas import QuestionBacktestMatch
                 match_objects = []
