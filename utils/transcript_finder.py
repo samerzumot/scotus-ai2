@@ -60,7 +60,10 @@ def find_oyez_transcript_url(case_name: str, term: Optional[int] = None) -> Opti
 def find_scotus_transcript_url(case_name: str, term: Optional[int] = None, docket: Optional[str] = None) -> Optional[str]:
     """
     Generate a potential SCOTUS.gov transcript URL.
-    SCOTUS.gov URLs are: https://www.supremecourt.gov/oral_arguments/argument_transcripts/{year}/{docket}.pdf
+    SCOTUS.gov URLs are: https://www.supremecourt.gov/oral_arguments/argument_transcripts/{year}/{docket}_{suffix}.pdf
+    
+    Note: The actual URL format includes a suffix (e.g., "25-332_7lhn.pdf").
+    We'll try the base format first, and the fetcher can handle variations.
     
     If docket is provided, use it directly. Otherwise, try to extract from case name or use common patterns.
     """
@@ -71,7 +74,10 @@ def find_scotus_transcript_url(case_name: str, term: Optional[int] = None, docke
     if docket:
         docket_clean = re.sub(r'[^0-9-]', '', docket)
         if docket_clean and term:
-            return f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{term}/{docket_clean}.pdf"
+            # Try base format first (most common)
+            base_url = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{term}/{docket_clean}.pdf"
+            # Also try with common suffixes (the fetcher will verify)
+            return base_url
     
     # Try to extract docket from case name (e.g., "No. 21-1234" or "21-1234")
     docket_match = re.search(r'(?:no\.?\s*)?(\d{2}-\d{2,4})', case_name, re.IGNORECASE)

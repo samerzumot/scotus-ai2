@@ -35,6 +35,18 @@
       "docket": "23-9012",
       "tags": ["administrative law", "chevron deference", "statutory interpretation"],
       "summary": "Administrative law case challenging agency authority. Issues of Chevron deference, statutory interpretation, and APA compliance following Loper Bright."
+    },
+    {
+      "id": "trump-v-slaughter",
+      "case_name": "Trump v. Slaughter",
+      "term": 2025,
+      "uploader_side": "PETITIONER",
+      "brief_text": "PETITION FOR WRIT OF CERTIORARI\n\nSUMMARY\nThis case presents a fundamental question of constitutional law: whether the President's Article II power to remove executive officers extends to members of independent agencies who exercise quasi-legislative and quasi-judicial functions. The lower court's decision upholding Humphrey's Executor conflicts with this Court's recent decisions in Seila Law v. CFPB and Trump v. United States, which have systematically eroded the foundations of Humphrey's Executor.\n\nARGUMENT\nI. Humphrey's Executor Has Been Systematically Eroded by This Court's Precedents\n\nIn Seila Law v. CFPB, this Court held that the President's power to remove and supervise those who wield executive power follows from the text of Article II, was settled by the First Congress, and has been confirmed by at least nine decisions from Ex Parte Hennen through Trump v. United States. Humphrey's Executor stands as an indefensible outlier from that line of authority.\n\nII. Humphrey's Executor's Reasoning Has Been Repudiated\n\nHumphrey's Executor held that federal agencies can exercise quasi-legislative and quasi-judicial powers that form no part of the executive power. This holding was gutted in Morrison v. Olson, but this Court correctly rejected the refurbished version as providing an amorphous test with no limiting principle. Respondent now proposes a third update to Humphrey's, which this Court has already rejected as making no logical or constitutional sense.\n\nIII. Humphrey's Executor Poses a Direct Threat to Constitutional Structure\n\nAs Justice Thomas wrote in Seila Law, Humphrey's Executor poses a direct threat to our constitutional structure and, as a result, the liberty of the American people. The modern expansion of the federal bureaucracy sharpens the Court's duty to ensure that the executive branch is overseen by a President accountable to the people.\n\nIV. Humphrey's Executor Must Be Overruled\n\nHumphrey's Executor has become a decaying husk with bold and particularly dangerous pretensions. It was grievously wrong when decided, and cases from Morrison to Trump have thoroughly eroded its foundations. The Court has repudiated Humphrey's reasoning and confined it to its facts, but it continues to generate confusion in the lower courts and it continues to tempt Congress to erect at the heart of our government a headless fourth branch insulated from political accountability and democratic control.\n\nCONCLUSION\nFor the foregoing reasons, Humphrey's Executor must be overruled, and the petition for writ of certiorari should be granted.",
+      "transcript_url": "https://www.supremecourt.gov/oral_arguments/argument_transcripts/2025/25-332_7lhn.pdf",
+      "case_hint": "Trump v. Slaughter (2025)",
+      "docket": "25-332",
+      "tags": ["separation of powers", "presidential authority", "constitutional law", "humphrey's executor"],
+      "summary": "Constitutional challenge to Humphrey's Executor. Questions about presidential removal power over independent agency members, particularly FTC Commissioner Rebecca Slaughter. Addresses whether quasi-legislative and quasi-judicial functions can insulate officers from Article II removal authority."
     }
   ]
 }
