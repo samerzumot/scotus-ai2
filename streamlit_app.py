@@ -229,6 +229,14 @@ def main():
                 use_precomputed = False
         else:
             use_precomputed = False
+            # Read PDF
+            with st.spinner("Reading PDF..."):
+                pdf_bytes = uploaded_file.read()
+                brief_text = extract_text_from_pdf_bytes(pdf_bytes, max_chars=220_000)
+                
+                if not brief_text:
+                    st.error("Could not extract text from PDF")
+                    return
         else:
             # Read PDF
             with st.spinner("Reading PDF..."):
@@ -413,9 +421,6 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         is_fallback = prediction.model.provider == "fallback"
         if is_fallback:
             st.warning(f"⚠️ **FALLBACK DATA**: {prediction.overall.why}")
-        
-        # Display results
-        st.success("✅ Analysis complete!")
         
         # Overall prediction
         st.header("🎯 Overall Prediction")
