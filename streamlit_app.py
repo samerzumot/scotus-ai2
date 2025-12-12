@@ -50,16 +50,11 @@ if "session" not in st.session_state:
     st.session_state.session = None
 
 
-# Store session globally, but create it lazily in async context
-_aiohttp_session: Optional[aiohttp.ClientSession] = None
-
+# For Streamlit, we create a fresh session for each operation to avoid event loop issues
 async def get_session_async():
-    """Get or create aiohttp session (must be called from async context)."""
-    global _aiohttp_session
-    if _aiohttp_session is None or _aiohttp_session.closed:
-        timeout = aiohttp.ClientTimeout(total=45)
-        _aiohttp_session = aiohttp.ClientSession(timeout=timeout)
-    return _aiohttp_session
+    """Create a new aiohttp session (must be called from async context)."""
+    timeout = aiohttp.ClientTimeout(total=45)
+    return aiohttp.ClientSession(timeout=timeout)
 
 
 def run_async(coro):
@@ -238,7 +233,10 @@ def main():
                         
                         async def _fetch_transcript():
                             session = await get_session_async()
-                            return await fetch_transcript_text(session, transcript_url=transcript_url)
+                            try:
+                                return await fetch_transcript_text(session, transcript_url=transcript_url)
+                            finally:
+                                await session.close()
                         
                         transcript = run_async(_fetch_transcript())
                         
