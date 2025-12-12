@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from utils.backtest import extract_questions_from_transcript, score_predicted_questions, score_predicted_questions_semantic
 from utils.pdf import extract_text_from_pdf_bytes
-from utils.predictor import predict_votes_and_questions
+from utils.predictor import predict_votes_and_questions, _load_corpus_cached, _build_prompt, _coerce_prediction
 from utils.schemas import BacktestResult
 from utils.transcript_finder import find_transcript_urls, extract_case_name_from_hint
 from utils.transcripts import fetch_transcript_text
@@ -165,36 +165,151 @@ def main():
                 corpus_path = os.getenv("HISTORICAL_CASES_PATH") or str(_ROOT / "data" / "historical_cases.jsonl")
                 retrieval_top_k = int(os.getenv("RETRIEVAL_TOP_K") or "5")
                 
-                # Predict with progress indicators
+                # Predict with detailed progress indicators
                 progress_bar = st.progress(0)
                 status_text = st.empty()
+                detail_text = st.empty()
                 
                 async def _predict():
                     session = await get_session_async()
                     try:
-                        status_text.text("📚 Loading historical cases...")
-                        progress_bar.progress(10)
-                        
-                        # Add a timeout wrapper
                         import asyncio
-                        prediction_task = predict_votes_and_questions(
-                            session=session,
-                            brief_text=brief_text,
-                            uploader_side=uploader_side,
-                            case_hint=case_hint,
+                        from utils.google_inference import GoogleInferenceClient
+                        from utils.retrieval import retrieve_similar_cases
+                        from utils.schemas import ModelInfo, RetrievedCaseRef
+                        
+                        # Step 1: Initialize Google client
+                        status_text.text("🔧 Initializing AI model...")
+                        detail_text.text("Setting up Google Gemini API client")
+                        progress_bar.progress(5)
+                        await asyncio.sleep(0.1)  # Allow UI to update
+                        
+                        google_key = os.getenv("GOOGLE_AI_KEY", "").strip()
+                        if not google_key:
+                            raise RuntimeError("GOOGLE_AI_KEY not set")
+                        
+                        predict_model = os.getenv("GOOGLE_PREDICT_MODEL", "models/gemini-2.5-pro").strip() or "models/gemini-2.5-pro"
+                        if not predict_model.startswith("models/"):
+                            predict_model = f"models/{predict_model}"
+                        embed_model = os.getenv("GOOGLE_EMBED_MODEL", "models/text-embedding-004").strip() or "models/text-embedding-004"
+                        
+                        google_client = GoogleInferenceClient(api_key=google_key)
+                        
+                        # Step 2: Load historical cases corpus
+                        status_text.text("📚 Loading historical cases corpus...")
+                        detail_text.text(f"Reading cases from {corpus_path}")
+                        progress_bar.progress(10)
+                        await asyncio.sleep(0.1)
+                        
+                        cases = await _load_corpus_cached(
                             corpus_path=corpus_path,
-                            retrieval_top_k=retrieval_top_k,
+                            google_client=google_client,
+                            embed_model=embed_model,
+                        )
+                        detail_text.text(f"Loaded {len(cases)} historical cases")
+                        progress_bar.progress(20)
+                        await asyncio.sleep(0.1)
+                        
+                        # Step 3: Generate embeddings and retrieve similar cases
+                        status_text.text("🔍 Finding similar historical cases...")
+                        detail_text.text("Generating embeddings and computing similarity")
+                        progress_bar.progress(30)
+                        await asyncio.sleep(0.1)
+                        
+                        retrieved_results = await retrieve_similar_cases(
+                            brief_text=brief_text,
+                            cases=cases,
+                            top_k=retrieval_top_k,
+                            google_client=google_client,
+                            embed_model=embed_model,
+                        )
+                        detail_text.text(f"Found {len(retrieved_results)} similar cases")
+                        progress_bar.progress(45)
+                        await asyncio.sleep(0.1)
+                        
+                        retrieved_refs = [
+                            RetrievedCaseRef(
+                                case_id=r.case.case_id,
+                                case_name=r.case.case_name,
+                                term=r.case.term,
+                                tags=r.case.tags,
+                                outcome=r.case.outcome
+                            )
+                            for r in retrieved_results
+                        ]
+                        
+                        # Step 4: Build prompt
+                        status_text.text("📝 Preparing analysis prompt...")
+                        detail_text.text("Combining brief text with historical context")
+                        progress_bar.progress(55)
+                        await asyncio.sleep(0.1)
+                        
+                        model_info = ModelInfo(
+                            provider="google",
+                            predict_model=predict_model,
+                            embed_model=embed_model,
+                            retrieval_top_k=retrieval_top_k
                         )
                         
-                        # Run with timeout (60 seconds max)
-                        try:
-                            prediction = await asyncio.wait_for(prediction_task, timeout=60.0)
-                            progress_bar.progress(100)
-                            status_text.text("✅ Analysis complete!")
-                            return prediction
-                        except asyncio.TimeoutError:
-                            status_text.text("⏱️ Analysis timed out (>60s)")
-                            raise RuntimeError("Analysis timed out after 60 seconds. The brief may be too long or the API is slow.")
+                        prompt = _build_prompt(
+                            brief_text=brief_text,
+                            uploader_side=(uploader_side or "UNKNOWN").strip().upper(),
+                            case_hint=case_hint,
+                            retrieved=retrieved_results,
+                        )
+                        
+                        # Step 5: Generate predictions with AI
+                        status_text.text("🤖 Generating predictions with AI...")
+                        detail_text.text(f"Using {predict_model} to analyze brief and predict votes/questions")
+                        progress_bar.progress(65)
+                        await asyncio.sleep(0.1)
+                        
+                        system_instruction = """You are SCOTUS AI, a legal prediction system. Analyze the brief and predict:
+1. How each of the 9 Justices will vote (PETITIONER/RESPONDENT/UNCERTAIN)
+2. One tough oral-argument question each Justice is likely to ask
+
+CRITICAL: Confidence values must be decimals between 0.0 and 1.0 (NOT percentages).
+- 0.85 = 85% confidence (CORRECT)
+- 85 = 8500% confidence (WRONG - will cause validation error)
+
+Return ONLY valid JSON matching the exact schema provided. No markdown, no explanations outside the JSON."""
+                        
+                        obj = await google_client.generate_json(
+                            model=predict_model,
+                            prompt=prompt,
+                            system_instruction=system_instruction,
+                            temperature=0.2,
+                            max_output_tokens=8192,
+                        )
+                        
+                        # Step 6: Validate and normalize results
+                        status_text.text("✅ Validating and processing results...")
+                        detail_text.text("Normalizing confidence values and validating predictions")
+                        progress_bar.progress(85)
+                        await asyncio.sleep(0.1)
+                        
+                        prediction = _coerce_prediction(
+                            obj,
+                            uploader_side=uploader_side,
+                            model_info=model_info,
+                            retrieved=retrieved_refs
+                        )
+                        
+                        progress_bar.progress(100)
+                        status_text.text("✅ Analysis complete!")
+                        detail_text.text(f"Generated predictions for {len(prediction.votes)} justices")
+                        await asyncio.sleep(0.5)  # Show completion message briefly
+                        
+                        return prediction
+                        
+                    except asyncio.TimeoutError:
+                        status_text.text("⏱️ Analysis timed out")
+                        detail_text.text("The operation took longer than 60 seconds")
+                        raise RuntimeError("Analysis timed out after 60 seconds. The brief may be too long or the API is slow.")
+                    except Exception as e:
+                        status_text.text("❌ Error during analysis")
+                        detail_text.text(f"Error: {str(e)[:100]}")
+                        raise
                     finally:
                         await session.close()
                 
