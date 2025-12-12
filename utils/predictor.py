@@ -326,6 +326,10 @@ async def predict_votes_and_questions(
 1. How each of the 9 Justices will vote (PETITIONER/RESPONDENT/UNCERTAIN)
 2. One tough oral-argument question each Justice is likely to ask
 
+CRITICAL: Confidence values must be decimals between 0.0 and 1.0 (NOT percentages).
+- 0.85 = 85% confidence (CORRECT)
+- 85 = 8500% confidence (WRONG - will cause validation error)
+
 Return ONLY valid JSON matching the exact schema provided. No markdown, no explanations outside the JSON."""
 
     try:
