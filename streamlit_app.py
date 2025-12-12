@@ -462,8 +462,8 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                 backtest_status.empty()
                 st.warning(f"⚠️ Could not fetch transcript: {str(e)}")
                 transcript = None
-                        
-                        if transcript and transcript.get("transcript_found"):
+            
+            if transcript and transcript.get("transcript_found"):
                 backtest_status.text("🔍 Extracting questions from transcript...")
                 backtest_progress.progress(60)
                 

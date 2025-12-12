@@ -9,5 +9,6 @@ venv/
 *.log
 hotreload.token
 env.local
+.cache/
 
 
