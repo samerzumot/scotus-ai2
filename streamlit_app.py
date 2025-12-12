@@ -430,8 +430,8 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             st.header("📊 Backtest Results")
             backtest_progress = st.progress(0)
             backtest_status = st.empty()
-                    
-                    async def _fetch_transcript():
+            
+            async def _fetch_transcript():
                         session = await get_session_async()
                         try:
                             backtest_status.text("📥 Fetching transcript...")
