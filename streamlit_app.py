@@ -50,21 +50,41 @@ if "session" not in st.session_state:
     st.session_state.session = None
 
 
-@st.cache_resource
-def get_session():
-    """Get or create aiohttp session."""
-    timeout = aiohttp.ClientTimeout(total=45)
-    return aiohttp.ClientSession(timeout=timeout)
+# Store session globally, but create it lazily in async context
+_aiohttp_session: Optional[aiohttp.ClientSession] = None
+
+async def get_session_async():
+    """Get or create aiohttp session (must be called from async context)."""
+    global _aiohttp_session
+    if _aiohttp_session is None or _aiohttp_session.closed:
+        timeout = aiohttp.ClientTimeout(total=45)
+        _aiohttp_session = aiohttp.ClientSession(timeout=timeout)
+    return _aiohttp_session
 
 
 def run_async(coro):
-    """Run async function in Streamlit."""
+    """Run async function in Streamlit with proper event loop handling."""
     try:
-        loop = asyncio.get_event_loop()
+        # Check if we're in an async context
+        loop = asyncio.get_running_loop()
+        # We're in an async context, need to use nest_asyncio
+        try:
+            import nest_asyncio
+            nest_asyncio.apply()
+            # Now we can run the coro
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, coro)
+                return future.result()
+        except ImportError:
+            # nest_asyncio not available, use thread pool with new loop
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, coro)
+                return future.result()
     except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(coro)
+        # No running loop, safe to use asyncio.run()
+        return asyncio.run(coro)
 
 
 def main():
@@ -134,9 +154,6 @@ def main():
             st.error("Please upload a PDF brief first")
             return
         
-        # Get session
-        session = get_session()
-        
         with st.spinner("📊 Analyzing brief and generating predictions..."):
             try:
                 # Read PDF
@@ -151,9 +168,10 @@ def main():
                 corpus_path = os.getenv("HISTORICAL_CASES_PATH") or str(_ROOT / "data" / "historical_cases.jsonl")
                 retrieval_top_k = int(os.getenv("RETRIEVAL_TOP_K") or "5")
                 
-                # Predict
-                prediction = run_async(
-                    predict_votes_and_questions(
+                # Predict (session will be created inside async context)
+                async def _predict():
+                    session = await get_session_async()
+                    return await predict_votes_and_questions(
                         session=session,
                         brief_text=brief_text,
                         uploader_side=uploader_side,
@@ -161,7 +179,8 @@ def main():
                         corpus_path=corpus_path,
                         retrieval_top_k=retrieval_top_k,
                     )
-                )
+                
+                prediction = run_async(_predict())
                 
                 # Check for fallback
                 is_fallback = prediction.model.provider == "fallback"
@@ -217,10 +236,11 @@ def main():
                         from utils.transcripts import fetch_transcript_text
                         from utils.google_inference import GoogleInferenceClient
                         
-                        from utils.transcripts import fetch_transcript_text
-                        transcript = run_async(
-                            fetch_transcript_text(session, transcript_url=transcript_url)
-                        )
+                        async def _fetch_transcript():
+                            session = await get_session_async()
+                            return await fetch_transcript_text(session, transcript_url=transcript_url)
+                        
+                        transcript = run_async(_fetch_transcript())
                         
                         if transcript.get("transcript_found"):
                             actual_questions = extract_questions_from_transcript(

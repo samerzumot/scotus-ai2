@@ -6,4 +6,5 @@ PyPDF2==3.0.1
 pydantic==2.12.5
 beautifulsoup4==4.12.3
 google-generativeai>=0.8.3
+nest-asyncio>=1.6.0
 
