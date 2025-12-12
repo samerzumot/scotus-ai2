@@ -477,14 +477,25 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                 backtest_progress.progress(80)
                 
                 # Always use semantic scoring with Google embeddings
-                google_key = os.getenv("GOOGLE_AI_KEY", "")
-                embed_model = os.getenv("GOOGLE_EMBED_MODEL", "models/text-embedding-004")
+                google_key = (os.getenv("GOOGLE_AI_KEY") or "").strip()
+                embed_model = (os.getenv("GOOGLE_EMBED_MODEL") or "").strip() or "models/text-embedding-004"
+                
+                # Debug logging
+                import sys
+                if not google_key:
+                    print("⚠️ DEBUG: GOOGLE_AI_KEY is empty or not set", file=sys.stderr)
+                if not embed_model:
+                    print("⚠️ DEBUG: GOOGLE_EMBED_MODEL is empty or not set", file=sys.stderr)
+                print(f"🔍 DEBUG: Using embed_model: {embed_model}", file=sys.stderr)
                 
                 if not google_key:
-                    score, matches, explanation = 0, [], "⚠️ Backtest requires GOOGLE_AI_KEY for semantic similarity. Please configure it in env.local."
+                    score, matches, explanation = 0, [], "⚠️ Backtest requires GOOGLE_AI_KEY for semantic similarity. Please configure it in env.local or in the sidebar above."
                     backtest_progress.progress(100)
                     backtest_status.empty()
-                else:
+                elif not embed_model:
+                    score, matches, explanation = 0, [], "⚠️ Backtest requires GOOGLE_EMBED_MODEL. Defaulting to models/text-embedding-004."
+                    embed_model = "models/text-embedding-004"
+                    # Continue with default
                     try:
                         google_client = GoogleInferenceClient(api_key=google_key)
                         
@@ -505,6 +516,30 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                         backtest_progress.progress(100)
                         backtest_status.empty()
                         score, matches, explanation = 0, [], f"⚠️ Semantic backtest failed: {str(e)}. Please check GOOGLE_AI_KEY and GOOGLE_EMBED_MODEL configuration."
+                else:
+                    try:
+                        google_client = GoogleInferenceClient(api_key=google_key)
+                        
+                        async def _score():
+                            import asyncio
+                            score_task = score_predicted_questions_semantic(
+                                predicted_questions,
+                                actual_questions,
+                                google_client=google_client,
+                                embed_model=embed_model,
+                            )
+                            return await asyncio.wait_for(score_task, timeout=30.0)
+                        
+                        score, matches, explanation = run_async(_score())
+                        backtest_progress.progress(100)
+                        backtest_status.empty()
+                    except Exception as e:
+                        backtest_progress.progress(100)
+                        backtest_status.empty()
+                        import traceback
+                        error_details = traceback.format_exc()
+                        print(f"⚠️ ERROR: Semantic backtest exception:\n{error_details}", file=sys.stderr)
+                        score, matches, explanation = 0, [], f"⚠️ Semantic backtest failed: {str(e)}\n\n**Debug info:**\n- GOOGLE_AI_KEY: {'Set' if google_key else 'Not set'}\n- GOOGLE_EMBED_MODEL: {embed_model}\n\nPlease check your configuration in env.local or the sidebar above."
                 
                 # Store backtest results
                 backtest_score = score

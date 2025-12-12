@@ -220,12 +220,23 @@ async def predict():
                 predicted_questions_with_justice = [(q.question, q.justice_id, q.justice_name) for q in prediction.questions]
                 predicted_questions = [q.question for q in prediction.questions]
                 
-                # Use semantic similarity if Google client is available (better for topic/gist matching)
+                # Always use semantic similarity with Google embeddings
                 google_key = (os.getenv("GOOGLE_AI_KEY") or "").strip()
                 embed_model = (os.getenv("GOOGLE_EMBED_MODEL") or "").strip() or "models/text-embedding-004"
                 
                 if not google_key:
                     score, matches, explanation = 0, [], "⚠️ Backtest requires GOOGLE_AI_KEY for semantic similarity. Please configure it in env.local."
+                elif not embed_model:
+                    embed_model = "models/text-embedding-004"  # Ensure default
+                    from utils.google_inference import GoogleInferenceClient
+                    google_client = GoogleInferenceClient(api_key=google_key)
+                    score, matches, explanation = await score_predicted_questions_semantic(
+                        predicted_questions,
+                        actual_questions,
+                        google_client=google_client,
+                        embed_model=embed_model,
+                        predicted_with_justice=predicted_questions_with_justice,
+                    )
                 else:
                     from utils.google_inference import GoogleInferenceClient
                     google_client = GoogleInferenceClient(api_key=google_key)
