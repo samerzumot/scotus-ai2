@@ -1,0 +1,41 @@
+{
+  "sample_briefs": [
+    {
+      "id": "williams-v-reeds",
+      "case_name": "Williams v. Reeds",
+      "term": 2024,
+      "uploader_side": "PETITIONER",
+      "brief_text": "PETITION FOR WRIT OF CERTIORARI\n\nSUMMARY\nThis case presents the question whether the lower court erred in holding that the challenged statute violates the First Amendment's protection of free speech. The petitioner argues that the statute imposes an impermissible content-based restriction on speech that cannot survive strict scrutiny.\n\nThe statute at issue requires certain disclosures that petitioners contend are unduly burdensome and chill protected speech. The lower court's decision conflicts with this Court's precedents establishing that content-based restrictions on speech are presumptively unconstitutional and must be narrowly tailored to serve a compelling government interest.\n\nARGUMENT\nI. The Statute Imposes a Content-Based Restriction on Speech\n\nThe challenged statute targets speech based on its content, requiring special disclosures for certain types of communications. This Court has consistently held that content-based restrictions are subject to strict scrutiny. See Reed v. Town of Gilbert, 576 U.S. 155 (2015).\n\nII. The Statute Cannot Survive Strict Scrutiny\n\nEven if the government's interest is compelling, the statute is not narrowly tailored. Less restrictive alternatives exist that would serve the government's interest without burdening protected speech to the same degree.\n\nIII. The Statute Chills Protected Speech\n\nThe disclosure requirements create a substantial burden that deters speakers from engaging in protected expression. This chilling effect violates the First Amendment's core protections.\n\nCONCLUSION\nFor the foregoing reasons, the petition for writ of certiorari should be granted.",
+      "transcript_url": "https://www.oyez.org/cases/2024/williams-v-reeds",
+      "case_hint": "Williams v. Reeds (2024)",
+      "docket": "23-1234",
+      "tags": ["first amendment", "free speech", "constitutional law"],
+      "summary": "First Amendment challenge to content-based speech restrictions. Questions about strict scrutiny, narrow tailoring, and chilling effects on protected speech."
+    },
+    {
+      "id": "smith-v-state-agency",
+      "case_name": "Smith v. State Agency",
+      "term": 2024,
+      "uploader_side": "RESPONDENT",
+      "brief_text": "BRIEF FOR RESPONDENT\n\nSUMMARY\nRespondent respectfully submits that the lower court correctly upheld the challenged regulation as a valid exercise of the government's authority to protect public health and safety. The regulation is content-neutral, serves important government interests, and is narrowly tailored to achieve those interests.\n\nARGUMENT\nI. The Regulation is Content-Neutral\n\nThe regulation applies uniformly to all speakers regardless of the content of their message. It is a time, place, and manner restriction that does not discriminate based on viewpoint or subject matter.\n\nII. The Regulation Serves Important Government Interests\n\nThe government has a compelling interest in protecting public health and ensuring accurate information reaches the public. The regulation directly advances these interests.\n\nIII. The Regulation is Narrowly Tailored\n\nThe regulation is the least restrictive means of achieving the government's legitimate objectives. Alternative approaches would be less effective in protecting the public interest.\n\nIV. The Regulation Leaves Open Alternative Channels of Communication\n\nSpeakers retain ample alternative means of communicating their message. The regulation does not foreclose all avenues of expression.\n\nCONCLUSION\nThe judgment of the lower court should be affirmed.",
+      "transcript_url": "https://www.oyez.org/cases/2024/smith-v-state-agency",
+      "case_hint": "Smith v. State Agency (2024)",
+      "docket": "23-5678",
+      "tags": ["administrative law", "public health", "regulatory authority"],
+      "summary": "Administrative law case involving government regulation. Issues of content neutrality, government interests, and alternative channels of communication."
+    },
+    {
+      "id": "jones-v-federal-bureau",
+      "case_name": "Jones v. Federal Bureau",
+      "term": 2024,
+      "uploader_side": "PETITIONER",
+      "brief_text": "PETITION FOR WRIT OF CERTIORARI\n\nSUMMARY\nThis case presents important questions about the scope of federal agency authority and the proper interpretation of the Administrative Procedure Act. The lower court's decision expands agency power beyond what Congress intended and conflicts with this Court's recent decisions limiting Chevron deference.\n\nARGUMENT\nI. The Agency's Interpretation Exceeds Its Statutory Authority\n\nThe agency's interpretation of the statute goes beyond the plain meaning of the text. This Court should not defer to an agency interpretation that conflicts with clear statutory language.\n\nII. Chevron Deference Does Not Apply\n\nFollowing this Court's decision in Loper Bright Enterprises v. Raimondo, 602 U.S. ___ (2024), courts must independently interpret statutes. Chevron deference is no longer applicable.\n\nIII. The Agency's Rule Violates the Administrative Procedure Act\n\nThe agency failed to provide adequate notice and opportunity for comment as required by the APA. The rulemaking process was procedurally defective.\n\nIV. The Rule is Arbitrary and Capricious\n\nThe agency failed to consider important aspects of the problem and did not provide a reasoned explanation for its decision. The rule cannot survive arbitrary and capricious review.\n\nCONCLUSION\nFor the reasons stated above, the petition should be granted.",
+      "transcript_url": "https://www.oyez.org/cases/2024/jones-v-federal-bureau",
+      "case_hint": "Jones v. Federal Bureau (2024)",
+      "docket": "23-9012",
+      "tags": ["administrative law", "chevron deference", "statutory interpretation"],
+      "summary": "Administrative law case challenging agency authority. Issues of Chevron deference, statutory interpretation, and APA compliance following Loper Bright."
+    }
+  ]
+}
+

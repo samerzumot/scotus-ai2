@@ -102,68 +102,129 @@ def main():
         st.markdown("---")
         st.caption("Set environment variables or enter them above")
     
-    # File upload
+    # Sample briefs section
     st.header("📄 Upload Brief")
-    uploaded_file = st.file_uploader(
-        "Choose a PDF brief",
-        type=["pdf"],
-        help="Upload a PDF brief to get predictions"
-    )
     
-    if not uploaded_file:
-        st.info("👆 Upload a PDF brief to get started")
+    # Load sample briefs
+    sample_briefs_path = _ROOT / "data" / "sample_briefs.json"
+    sample_briefs = []
+    if sample_briefs_path.exists():
+        try:
+            import json
+            with open(sample_briefs_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                sample_briefs = data.get("sample_briefs", [])
+        except Exception:
+            pass
+    
+    # Show sample briefs if available
+    use_sample = False
+    selected_sample = None
+    
+    if sample_briefs:
+        st.subheader("📚 Quick Start: Sample Briefs")
+        st.caption("Try these pre-loaded briefs with backtest data (no upload needed)")
+        
+        sample_options = ["-- Select a sample brief --"] + [f"{s['case_name']} ({s.get('term', 'N/A')})" for s in sample_briefs]
+        selected_sample_name = st.selectbox(
+            "Choose a sample brief",
+            sample_options,
+            key="sample_brief_selector"
+        )
+        
+        if selected_sample_name != "-- Select a sample brief --":
+            selected_sample = next((s for s in sample_briefs if f"{s['case_name']} ({s.get('term', 'N/A')})" == selected_sample_name), None)
+            if selected_sample:
+                use_sample = True
+                st.success(f"✅ Selected: **{selected_sample['case_name']}**")
+                if selected_sample.get('summary'):
+                    st.info(f"📋 *{selected_sample['summary']}*")
+    
+    st.divider()
+    
+    # File upload
+    uploaded_file = None
+    if not use_sample:
+        uploaded_file = st.file_uploader(
+            "Or upload your own PDF brief",
+            type=["pdf"],
+            help="Upload a PDF brief to get predictions"
+        )
+    
+    if not use_sample and not uploaded_file:
+        st.info("👆 Select a sample brief above or upload your own PDF to get started")
         return
     
-    # Form inputs
-    col1, col2 = st.columns(2)
-    with col1:
-        uploader_side = st.selectbox(
-            "Brief Side",
-            ["UNKNOWN", "PETITIONER", "RESPONDENT", "AMICUS"],
-            index=0
+    # Form inputs (only show if not using sample)
+    if not use_sample:
+        col1, col2 = st.columns(2)
+        with col1:
+            uploader_side = st.selectbox(
+                "Brief Side",
+                ["UNKNOWN", "PETITIONER", "RESPONDENT", "AMICUS"],
+                index=0
+            )
+        
+        with col2:
+            case_hint = st.text_input(
+                "Case Hint (optional)",
+                placeholder="e.g., Dobbs v. Jackson (2022)",
+                help="Case name or docket number for transcript auto-detection"
+            )
+        
+        transcript_url = st.text_input(
+            "Transcript URL (optional)",
+            placeholder="https://www.oyez.org/cases/...",
+            help="For backtesting predicted questions against actual transcript"
         )
-    
-    with col2:
-        case_hint = st.text_input(
-            "Case Hint (optional)",
-            placeholder="e.g., Dobbs v. Jackson (2022)",
-            help="Case name or docket number for transcript auto-detection"
-        )
-    
-    transcript_url = st.text_input(
-        "Transcript URL (optional)",
-        placeholder="https://www.oyez.org/cases/...",
-        help="For backtesting predicted questions against actual transcript"
-    )
-    
-    # Auto-detect transcript if case hint provided
-    if case_hint and not transcript_url:
-        case_name = extract_case_name_from_hint(case_hint)
-        if case_name:
-            candidates = find_transcript_urls(case_name)
-            if candidates:
-                transcript_url = candidates[0]
-                st.info(f"🔍 Auto-detected transcript: {transcript_url}")
+        
+        # Auto-detect transcript if case hint provided
+        if case_hint and not transcript_url:
+            case_name = extract_case_name_from_hint(case_hint)
+            if case_name:
+                candidates = find_transcript_urls(case_name)
+                if candidates:
+                    transcript_url = candidates[0]
+                    st.info(f"🔍 Auto-detected transcript: {transcript_url}")
+    else:
+        # Use sample values (will be set in analyze section)
+        uploader_side = "UNKNOWN"
+        case_hint = ""
+        transcript_url = ""
     
     # Analyze button
     if st.button("🔍 Analyze Brief", type="primary", use_container_width=True):
-        if not uploaded_file:
-            st.error("Please upload a PDF brief first")
+        if not use_sample and not uploaded_file:
+            st.error("Please select a sample brief or upload a PDF first")
             return
         
-        with st.spinner("📊 Analyzing brief and generating predictions..."):
-            try:
-                # Read PDF
+        # Get brief text and metadata
+        if use_sample and selected_sample:
+            brief_text = selected_sample.get("brief_text", "")
+            uploader_side = selected_sample.get("uploader_side", "UNKNOWN")
+            case_hint = selected_sample.get("case_hint", selected_sample.get("case_name", ""))
+            transcript_url = selected_sample.get("transcript_url", "")
+            
+            if not brief_text:
+                st.error("Sample brief text is missing")
+                return
+            
+            st.info(f"📄 Using sample brief: **{selected_sample['case_name']}**")
+        else:
+            # Read PDF
+            with st.spinner("Reading PDF..."):
                 pdf_bytes = uploaded_file.read()
                 brief_text = extract_text_from_pdf_bytes(pdf_bytes, max_chars=220_000)
                 
                 if not brief_text:
                     st.error("Could not extract text from PDF")
                     return
-                
-                # Get config
-                corpus_path = os.getenv("HISTORICAL_CASES_PATH") or str(_ROOT / "data" / "historical_cases.jsonl")
-                retrieval_top_k = int(os.getenv("RETRIEVAL_TOP_K") or "5")
+        
+        # Get config
+        corpus_path = os.getenv("HISTORICAL_CASES_PATH") or str(_ROOT / "data" / "historical_cases.jsonl")
+        retrieval_top_k = int(os.getenv("RETRIEVAL_TOP_K") or "5")
+        
+        try:
                 
                 # Predict with detailed progress indicators
                 progress_bar = st.progress(0)
