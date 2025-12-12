@@ -29,6 +29,7 @@ from utils.pdf import extract_text_from_pdf_bytes
 from utils.predictor import predict_votes_and_questions
 from utils.schemas import BacktestResult
 from utils.transcript_finder import find_transcript_urls, extract_case_name_from_hint
+from utils.transcripts import fetch_transcript_text
 
 # Load environment
 _ROOT = Path(__file__).parent
