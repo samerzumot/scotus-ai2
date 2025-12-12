@@ -635,6 +635,40 @@ body {
   font-style: italic;
 }
 
+.question-card__citations {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: rgba(37, 99, 235, 0.05);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.citation {
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgba(37, 99, 235, 0.1);
+  border-radius: 4px;
+  margin: 0 2px;
+  font-family: var(--font-display);
+}
+
+.citation-highlight {
+  color: var(--color-primary);
+  font-weight: 600;
+  background: rgba(37, 99, 235, 0.1);
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+.case-citation {
+  display: inline-block;
+  margin-left: var(--spacing-sm);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
 /* Grid */
 .grid {
   display: grid;

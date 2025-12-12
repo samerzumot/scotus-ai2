@@ -99,6 +99,10 @@ class QuestionBacktestMatch(BaseModel):
     predicted: str
     best_actual: str
     similarity: float = Field(ge=0.0, le=1.0)
+    justice_id: str = ""
+    justice_name: str = ""
+    predicted_citations: List[str] = []  # Extracted case citations from predicted question
+    actual_citations: List[str] = []  # Extracted case citations from actual question
 
 
 class BacktestResult(BaseModel):

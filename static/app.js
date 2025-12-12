@@ -262,32 +262,74 @@ function renderPrediction(payload) {
     });
   }
 
-  // Render questions
+  // Render questions with citations
   if (els.questions) {
     els.questions.innerHTML = "";
     (pred.questions || []).forEach((q) => {
       const card = document.createElement("div");
       card.className = "question-card";
+      
+      // Extract and format citations
+      const questionText = q.question || "";
+      const citations = extractCitations(questionText);
+      const questionWithCitations = formatQuestionWithCitations(questionText, citations);
+      
       card.innerHTML = `
         <div class="question-card__header">
           <span class="question-card__justice">${escapeHtml(q.justice_name || q.justice_id)}</span>
         </div>
-        <div class="question-card__text">${escapeHtml(q.question || "")}</div>
+        <div class="question-card__text">${questionWithCitations}</div>
+        ${citations.length > 0 ? `<div class="question-card__citations">📚 Citations: ${citations.map(c => `<span class="citation">${escapeHtml(c)}</span>`).join(", ")}</div>` : ""}
         ${q.what_it_tests ? `<div class="question-card__meta">${escapeHtml(q.what_it_tests)}</div>` : ""}
       `;
       els.questions.appendChild(card);
     });
   }
+  
+  // Helper functions for citations
+  function extractCitations(text) {
+    const citations = [];
+    // Pattern: "Case Name v. Case Name"
+    const casePattern = /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\s+v\.\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g;
+    let match;
+    while ((match = casePattern.exec(text)) !== null) {
+      if (match[1].length > 5 && match[1].length < 150) {
+        citations.push(match[1]);
+      }
+    }
+    // Pattern: "### U.S. ###"
+    const scotusPattern = /\b(\d{1,4}\s+U\.S\.\s+\d{1,4})/g;
+    while ((match = scotusPattern.exec(text)) !== null) {
+      citations.push(match[1]);
+    }
+    return [...new Set(citations)]; // Remove duplicates
+  }
+  
+  function formatQuestionWithCitations(text, citations) {
+    let formatted = escapeHtml(text);
+    // Highlight citations in the text
+    citations.forEach(citation => {
+      const regex = new RegExp(`(${citation.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      formatted = formatted.replace(regex, '<strong class="citation-highlight">$1</strong>');
+    });
+    return formatted;
+  }
 
-  // Render retrieved cases
+  // Render retrieved cases with citations
   const r = pred.retrieved_cases || [];
   if (els.retrieval) {
     if (r.length) {
       els.retrieval.innerHTML = r.map((x) => {
         const tags = (x.tags || []).map(t => `<span class="retrieval-item__tag">${escapeHtml(t)}</span>`).join("");
+        // Format case name as citation
+        const caseName = escapeHtml(x.case_name || x.case_id);
+        const caseCitation = formatCaseCitation(x);
         return `
           <div class="retrieval-item">
-            <div class="retrieval-item__name">${escapeHtml(x.case_name || x.case_id)}</div>
+            <div class="retrieval-item__name">
+              <strong>${caseName}</strong>
+              ${caseCitation ? `<span class="case-citation">${caseCitation}</span>` : ""}
+            </div>
             <div class="retrieval-item__meta">
               ${x.term ? `<span>Term ${escapeHtml(String(x.term))}</span>` : ""}
               ${x.outcome ? `<span>${escapeHtml(x.outcome)}</span>` : ""}
@@ -299,6 +341,17 @@ function renderPrediction(payload) {
     } else {
       els.retrieval.textContent = "—";
     }
+  }
+  
+  // Helper to format case citation
+  function formatCaseCitation(caseRef) {
+    if (!caseRef.case_name) return "";
+    // If case name already looks like a citation, return it
+    if (caseRef.case_name.includes("v.") || caseRef.case_name.includes("U.S.")) {
+      return caseRef.case_name;
+    }
+    // Otherwise, just return the case name as-is
+    return "";
   }
 
   // Render backtest
@@ -342,11 +395,20 @@ function renderPrediction(payload) {
                     .map(
                       (m) =>
                         `<div style="padding: 8px; background: var(--color-bg); border-radius: 8px;">
-                          <div style="font-weight: 600; margin-bottom: 4px;">Predicted:</div>
-                          <div style="font-size: 13px; margin-bottom: 8px;">${escapeHtml(m.predicted)}</div>
-                          <div style="font-weight: 600; margin-bottom: 4px;">Best Match:</div>
-                          <div style="font-size: 13px; margin-bottom: 4px;">${escapeHtml(m.best_actual)}</div>
-                          <div style="font-size: 12px; color: var(--color-text-secondary);">
+                          <div style="font-weight: 600; margin-bottom: 4px; color: var(--color-primary);">
+                            ${m.justice_name ? `Justice ${escapeHtml(m.justice_name)}` : "Question"} Match
+                          </div>
+                          <div style="font-weight: 600; margin-bottom: 4px; font-size: 12px;">Predicted:</div>
+                          <div style="font-size: 13px; margin-bottom: 8px; line-height: 1.5;">
+                            ${formatQuestionWithCitations(m.predicted || "", m.predicted_citations || [])}
+                          </div>
+                          ${(m.predicted_citations || []).length > 0 ? `<div style="font-size: 11px; color: var(--color-text-secondary); margin-bottom: 8px; font-style: italic;">📚 Citations: ${(m.predicted_citations || []).map(c => escapeHtml(c)).join(", ")}</div>` : ""}
+                          <div style="font-weight: 600; margin-bottom: 4px; font-size: 12px;">Best Actual Match:</div>
+                          <div style="font-size: 13px; margin-bottom: 4px; line-height: 1.5;">
+                            ${formatQuestionWithCitations(m.best_actual || "", m.actual_citations || [])}
+                          </div>
+                          ${(m.actual_citations || []).length > 0 ? `<div style="font-size: 11px; color: var(--color-text-secondary); margin-bottom: 8px; font-style: italic;">📚 Citations: ${(m.actual_citations || []).map(c => escapeHtml(c)).join(", ")}</div>` : ""}
+                          <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--color-border);">
                             Similarity: ${Math.round(100 * (m.similarity || 0))}%
                           </div>
                         </div>`

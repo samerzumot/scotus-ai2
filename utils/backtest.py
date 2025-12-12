@@ -62,7 +62,7 @@ async def score_predicted_questions_semantic(
     actual: List[str],
     google_client: Optional[Any] = None,  # GoogleInferenceClient, but avoid circular import
     embed_model: Optional[str] = None,
-) -> Tuple[int, List[Tuple[str, str, float]], str]:
+) -> Tuple[int, List[Dict[str, Any]], str]:
     """
     Score predicted questions using semantic similarity (embeddings).
     Falls back to lexical similarity if embeddings aren't available.
@@ -108,13 +108,19 @@ async def score_predicted_questions_semantic(
                     actual_embeddings.append(None)
             
             # Compute semantic similarities
-            matches: List[Tuple[str, str, float]] = []
+            matches: List[Dict[str, Any]] = []
             sims: List[float] = []
             
             for i, pq in enumerate(predicted):
                 pred_emb = predicted_embeddings[i] if i < len(predicted_embeddings) else None
                 best_a = ""
                 best_s = 0.0
+                
+                # Get justice info if available
+                justice_id = ""
+                justice_name = ""
+                if predicted_with_justice and i < len(predicted_with_justice):
+                    _, justice_id, justice_name = predicted_with_justice[i]
                 
                 for j, aq in enumerate(actual):
                     actual_emb = actual_embeddings[j] if j < len(actual_embeddings) else None
@@ -131,10 +137,24 @@ async def score_predicted_questions_semantic(
                         best_a = aq
                 
                 sims.append(best_s)
-                matches.append((pq, best_a, float(best_s)))
+                
+                # Extract citations
+                from utils.citations import extract_case_citations
+                pred_citations = extract_case_citations(pq)
+                actual_citations = extract_case_citations(best_a)
+                
+                matches.append({
+                    "predicted": pq,
+                    "best_actual": best_a,
+                    "similarity": float(best_s),
+                    "justice_id": justice_id,
+                    "justice_name": justice_name,
+                    "predicted_citations": pred_citations,
+                    "actual_citations": actual_citations,
+                })
             
             score = int(round(100.0 * (sum(sims) / max(1, len(sims)))))
-            matches.sort(key=lambda t: t[2], reverse=True)
+            matches.sort(key=lambda t: t.get("similarity", 0.0), reverse=True)
             
             explanation = _generate_backtest_explanation(score, len(predicted), len(actual), matches, semantic=True)
             return score, matches, explanation
@@ -146,28 +166,53 @@ async def score_predicted_questions_semantic(
             use_semantic = False
 
     # Fallback to lexical similarity (Jaccard)
-    matches: List[Tuple[str, str, float]] = []
+    matches: List[Dict[str, Any]] = []
     sims: List[float] = []
-    for pq in predicted:
+    for i, pq in enumerate(predicted):
         best_a = ""
         best_s = 0.0
+        
+        # Get justice info if available
+        justice_id = ""
+        justice_name = ""
+        if predicted_with_justice and i < len(predicted_with_justice):
+            _, justice_id, justice_name = predicted_with_justice[i]
+        
         for aq in actual:
             s = jaccard_similarity(pq, aq)
             if s > best_s:
                 best_s = s
                 best_a = aq
         sims.append(best_s)
-        matches.append((pq, best_a, float(best_s)))
+        
+        # Extract citations
+        from utils.citations import extract_case_citations
+        pred_citations = extract_case_citations(pq)
+        actual_citations = extract_case_citations(best_a)
+        
+        matches.append({
+            "predicted": pq,
+            "best_actual": best_a,
+            "similarity": float(best_s),
+            "justice_id": justice_id,
+            "justice_name": justice_name,
+            "predicted_citations": pred_citations,
+            "actual_citations": actual_citations,
+        })
 
     score = int(round(100.0 * (sum(sims) / max(1, len(sims)))))
-    matches.sort(key=lambda t: t[2], reverse=True)
+    matches.sort(key=lambda t: t.get("similarity", 0.0), reverse=True)
     
     explanation = _generate_backtest_explanation(score, len(predicted), len(actual), matches, semantic=False)
     
     return score, matches, explanation
 
 
-def score_predicted_questions(predicted: List[str], actual: List[str]) -> Tuple[int, List[Tuple[str, str, float]], str]:
+def score_predicted_questions(
+    predicted: List[str],
+    actual: List[str],
+    predicted_with_justice: Optional[List[Tuple[str, str, str]]] = None,  # List of (question, justice_id, justice_name)
+) -> Tuple[int, List[Dict[str, Any]], str]:
     """
     Synchronous version using lexical similarity (for backward compatibility).
     Use score_predicted_questions_semantic for better semantic matching.
@@ -185,21 +230,42 @@ def score_predicted_questions(predicted: List[str], actual: List[str]) -> Tuple[
             explanation += "No actual questions found in transcript."
         return 0, [], explanation
 
-    matches: List[Tuple[str, str, float]] = []
+    matches: List[Dict[str, Any]] = []
     sims: List[float] = []
-    for pq in predicted:
+    for i, pq in enumerate(predicted):
         best_a = ""
         best_s = 0.0
+        
+        # Get justice info if available
+        justice_id = ""
+        justice_name = ""
+        if predicted_with_justice and i < len(predicted_with_justice):
+            _, justice_id, justice_name = predicted_with_justice[i]
+        
         for aq in actual:
             s = jaccard_similarity(pq, aq)
             if s > best_s:
                 best_s = s
                 best_a = aq
         sims.append(best_s)
-        matches.append((pq, best_a, float(best_s)))
+        
+        # Extract citations
+        from utils.citations import extract_case_citations
+        pred_citations = extract_case_citations(pq)
+        actual_citations = extract_case_citations(best_a)
+        
+        matches.append({
+            "predicted": pq,
+            "best_actual": best_a,
+            "similarity": float(best_s),
+            "justice_id": justice_id,
+            "justice_name": justice_name,
+            "predicted_citations": pred_citations,
+            "actual_citations": actual_citations,
+        })
 
     score = int(round(100.0 * (sum(sims) / max(1, len(sims)))))
-    matches.sort(key=lambda t: t[2], reverse=True)
+    matches.sort(key=lambda t: t.get("similarity", 0.0), reverse=True)
     
     explanation = _generate_backtest_explanation(score, len(predicted), len(actual), matches, semantic=False)
     
@@ -210,7 +276,7 @@ def _generate_backtest_explanation(
     score_pct: int,
     num_predicted: int,
     num_actual: int,
-    matches: List[Tuple[str, str, float]],
+    matches: List[Any],  # Can be List[Tuple] or List[Dict]
     semantic: bool = False,
 ) -> str:
     """Generate a human-readable explanation of backtest results."""
@@ -232,10 +298,17 @@ def _generate_backtest_explanation(
     
     explanation += f"**Summary:** Compared {num_predicted} predicted questions against {num_actual} actual questions from the transcript using {method}.\n\n"
     
-    # Analyze top matches
-    high_sim = [m for m in matches if m[2] >= 0.5]
-    medium_sim = [m for m in matches if 0.3 <= m[2] < 0.5]
-    low_sim = [m for m in matches if m[2] < 0.3]
+    # Analyze top matches (handle both tuple and dict formats)
+    def get_similarity(m):
+        if isinstance(m, dict):
+            return m.get("similarity", 0.0)
+        elif isinstance(m, tuple) and len(m) >= 3:
+            return m[2]
+        return 0.0
+    
+    high_sim = [m for m in matches if get_similarity(m) >= 0.5]
+    medium_sim = [m for m in matches if 0.3 <= get_similarity(m) < 0.5]
+    low_sim = [m for m in matches if get_similarity(m) < 0.3]
     
     if high_sim:
         explanation += f"**Strong matches ({len(high_sim)}):** Questions with ≥50% similarity to actual transcript questions.\n"
@@ -257,10 +330,16 @@ def _generate_backtest_explanation(
     # Add specific insights from top matches
     if matches:
         top_match = matches[0]
-        if top_match[2] >= 0.6:
-            explanation += f"\n\n**Best match:** The predicted question \"{top_match[0][:80]}...\" closely matches the actual question \"{top_match[1][:80]}...\" ({int(top_match[2]*100)}% similarity)."
-        elif top_match[2] >= 0.3:
-            explanation += f"\n\n**Closest match:** The predicted question \"{top_match[0][:80]}...\" partially matches \"{top_match[1][:80]}...\" ({int(top_match[2]*100)}% similarity)."
+        pred_text = top_match.get("predicted", top_match[0] if isinstance(top_match, tuple) else "")[:80]
+        actual_text = top_match.get("best_actual", top_match[1] if isinstance(top_match, tuple) else "")[:80]
+        sim = get_similarity(top_match)
+        justice_name = top_match.get("justice_name", "") if isinstance(top_match, dict) else ""
+        justice_label = f" (Justice {justice_name})" if justice_name else ""
+        
+        if sim >= 0.6:
+            explanation += f"\n\n**Best match{justice_label}:** The predicted question \"{pred_text}...\" closely matches the actual question \"{actual_text}...\" ({int(sim*100)}% similarity)."
+        elif sim >= 0.3:
+            explanation += f"\n\n**Closest match{justice_label}:** The predicted question \"{pred_text}...\" partially matches \"{actual_text}...\" ({int(sim*100)}% similarity)."
     
     return explanation
 

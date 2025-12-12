@@ -216,6 +216,8 @@ async def predict():
             
             if transcript_found:
                 actual_questions = extract_questions_from_transcript(transcript.get("transcript_text") or "", limit=200)
+                # Pass questions with justice info for better matching
+                predicted_questions_with_justice = [(q.question, q.justice_id, q.justice_name) for q in prediction.questions]
                 predicted_questions = [q.question for q in prediction.questions]
                 
                 # Use semantic similarity if Google client is available (better for topic/gist matching)
@@ -231,30 +233,63 @@ async def predict():
                             actual_questions,
                             google_client=google_client,
                             embed_model=embed_model,
+                            predicted_with_justice=predicted_questions_with_justice,
                         )
                     except Exception as e:
                         # Fallback to lexical if semantic fails - log warning
                         import sys
                         print(f"⚠️ WARNING: Semantic backtest scoring failed, using lexical similarity: {e}", file=sys.stderr)
-                        score, matches, explanation = score_predicted_questions(predicted_questions, actual_questions)
+                        score, matches, explanation = score_predicted_questions(
+                            predicted_questions,
+                            actual_questions,
+                            predicted_with_justice=predicted_questions_with_justice,
+                        )
                         # Add warning to explanation
                         explanation = f"⚠️ **Note:** Semantic similarity unavailable, using lexical matching.\n\n{explanation}"
                 else:
                     # Use lexical similarity if no Google key - log warning
                     import sys
                     print("⚠️ WARNING: GOOGLE_AI_KEY not set, using lexical similarity for backtest (less accurate). Set GOOGLE_AI_KEY for semantic matching.", file=sys.stderr)
-                    score, matches, explanation = score_predicted_questions(predicted_questions, actual_questions)
+                    score, matches, explanation = score_predicted_questions(
+                        predicted_questions,
+                        actual_questions,
+                        predicted_with_justice=predicted_questions_with_justice,
+                    )
                     # Add warning to explanation
                     explanation = f"⚠️ **Note:** Using lexical similarity (word overlap) instead of semantic matching. Set GOOGLE_AI_KEY for better topic-based scoring.\n\n{explanation}"
+                # Convert enhanced matches to QuestionBacktestMatch objects
+                from utils.schemas import QuestionBacktestMatch
+                match_objects = []
+                for m in matches[:10]:
+                    if isinstance(m, dict):
+                        match_objects.append(QuestionBacktestMatch(
+                            predicted=m.get("predicted", ""),
+                            best_actual=m.get("best_actual", ""),
+                            similarity=m.get("similarity", 0.0),
+                            justice_id=m.get("justice_id", ""),
+                            justice_name=m.get("justice_name", ""),
+                            predicted_citations=m.get("predicted_citations", []),
+                            actual_citations=m.get("actual_citations", []),
+                        ))
+                    else:
+                        # Fallback for tuple format (shouldn't happen but be safe)
+                        p, a, s = m if len(m) >= 3 else (m[0] if len(m) > 0 else "", m[1] if len(m) > 1 else "", 0.0)
+                        match_objects.append(QuestionBacktestMatch(
+                            predicted=p,
+                            best_actual=a,
+                            similarity=s,
+                            justice_id="",
+                            justice_name="",
+                            predicted_citations=[],
+                            actual_citations=[],
+                        ))
+                
                 backtest_obj = BacktestResult(
                     transcript_url=transcript.get("transcript_url") or transcript_url,
                     transcript_found=True,
                     transcript_auto_detected=transcript_auto_detected,
                     questions_score_pct=score,
-                    matches=[
-                        {"predicted": p, "best_actual": a, "similarity": s}
-                        for (p, a, s) in matches[:10]
-                    ],
+                    matches=[m.model_dump() for m in match_objects],
                     explanation=explanation,
                 )
             else:
