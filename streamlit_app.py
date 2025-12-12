@@ -263,14 +263,15 @@ def main():
                             backtest_progress.progress(20)
                             
                             import asyncio
-                            fetch_task = fetch_transcript_text(session, transcript_url=transcript_url)
-                            transcript = await asyncio.wait_for(fetch_task, timeout=30.0)
+                            # Reduced timeout to 15s and limit to first 150k chars (most questions are early)
+                            fetch_task = fetch_transcript_text(session, transcript_url=transcript_url, max_chars=150_000)
+                            transcript = await asyncio.wait_for(fetch_task, timeout=15.0)
                             
                             backtest_progress.progress(50)
                             return transcript
                         except asyncio.TimeoutError:
                             backtest_status.text("⏱️ Transcript fetch timed out")
-                            raise RuntimeError("Transcript fetch timed out after 30 seconds")
+                            raise RuntimeError("Transcript fetch timed out after 15 seconds")
                         finally:
                             await session.close()
                     
@@ -286,8 +287,9 @@ def main():
                             backtest_status.text("🔍 Extracting questions from transcript...")
                             backtest_progress.progress(60)
                             
+                            # Extract questions (limit to 100 for faster processing)
                             actual_questions = extract_questions_from_transcript(
-                                transcript.get("transcript_text") or "", limit=200
+                                transcript.get("transcript_text") or "", limit=100
                             )
                             predicted_questions = [q.question for q in prediction.questions]
                             
