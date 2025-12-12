@@ -432,31 +432,36 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             backtest_status = st.empty()
             
             async def _fetch_transcript():
-                        session = await get_session_async()
-                        try:
-                            backtest_status.text("📥 Fetching transcript...")
-                            backtest_progress.progress(20)
-                            
-                            import asyncio
-                            # Reduced timeout to 15s and limit to first 150k chars (most questions are early)
-                            fetch_task = fetch_transcript_text(session, transcript_url=transcript_url, max_chars=150_000)
-                            transcript = await asyncio.wait_for(fetch_task, timeout=15.0)
-                            
-                            backtest_progress.progress(50)
-                            return transcript
-                        except asyncio.TimeoutError:
-                            backtest_status.text("⏱️ Transcript fetch timed out")
-                            raise RuntimeError("Transcript fetch timed out after 15 seconds")
-                        finally:
-                            await session.close()
+                session = await get_session_async()
+                try:
+                    backtest_status.text("📥 Fetching transcript (checking cache first)...")
+                    backtest_progress.progress(10)
                     
-                    try:
-                        transcript = run_async(_fetch_transcript())
-                    except Exception as e:
-                        backtest_progress.empty()
-                        backtest_status.empty()
-                        st.warning(f"⚠️ Could not fetch transcript: {str(e)}")
-                        transcript = None
+                    import asyncio
+                    # Aggressive optimizations: 100k chars, 8s timeout, caching enabled
+                    fetch_task = fetch_transcript_text(
+                        session,
+                        transcript_url=transcript_url,
+                        max_chars=100_000,  # Reduced to 100k - questions are in first 30-40%
+                        use_cache=True,  # Use cache for instant results on repeat
+                    )
+                    transcript = await asyncio.wait_for(fetch_task, timeout=8.0)  # Reduced to 8s
+                    
+                    backtest_progress.progress(50)
+                    return transcript
+                except asyncio.TimeoutError:
+                    backtest_status.text("⏱️ Transcript fetch timed out (>8s)")
+                    raise RuntimeError("Transcript fetch timed out after 8 seconds")
+                finally:
+                    await session.close()
+            
+            try:
+                transcript = run_async(_fetch_transcript())
+            except Exception as e:
+                backtest_progress.empty()
+                backtest_status.empty()
+                st.warning(f"⚠️ Could not fetch transcript: {str(e)}")
+                transcript = None
                         
                         if transcript and transcript.get("transcript_found"):
                 backtest_status.text("🔍 Extracting questions from transcript...")
