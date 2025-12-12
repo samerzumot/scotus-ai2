@@ -476,11 +476,15 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                 backtest_status.text("📊 Scoring questions...")
                 backtest_progress.progress(80)
                 
-                # Try semantic scoring
+                # Always use semantic scoring with Google embeddings
                 google_key = os.getenv("GOOGLE_AI_KEY", "")
                 embed_model = os.getenv("GOOGLE_EMBED_MODEL", "models/text-embedding-004")
                 
-                if google_key:
+                if not google_key:
+                    score, matches, explanation = 0, [], "⚠️ Backtest requires GOOGLE_AI_KEY for semantic similarity. Please configure it in env.local."
+                    backtest_progress.progress(100)
+                    backtest_status.empty()
+                else:
                     try:
                         google_client = GoogleInferenceClient(api_key=google_key)
                         
@@ -497,20 +501,10 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                         score, matches, explanation = run_async(_score())
                         backtest_progress.progress(100)
                         backtest_status.empty()
-                    except Exception:
-                        from utils.backtest import score_predicted_questions
-                        score, matches, explanation = score_predicted_questions(
-                            predicted_questions, actual_questions
-                        )
+                    except Exception as e:
                         backtest_progress.progress(100)
                         backtest_status.empty()
-                else:
-                    from utils.backtest import score_predicted_questions
-                    score, matches, explanation = score_predicted_questions(
-                        predicted_questions, actual_questions
-                    )
-                    backtest_progress.progress(100)
-                    backtest_status.empty()
+                        score, matches, explanation = 0, [], f"⚠️ Semantic backtest failed: {str(e)}. Please check GOOGLE_AI_KEY and GOOGLE_EMBED_MODEL configuration."
                 
                 # Store backtest results
                 backtest_score = score

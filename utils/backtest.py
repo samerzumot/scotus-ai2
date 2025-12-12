@@ -62,6 +62,7 @@ async def score_predicted_questions_semantic(
     actual: List[str],
     google_client: Optional[Any] = None,  # GoogleInferenceClient, but avoid circular import
     embed_model: Optional[str] = None,
+    predicted_with_justice: Optional[List[Tuple[str, str, str]]] = None,  # List of (question, justice_id, justice_name)
 ) -> Tuple[int, List[Dict[str, Any]], str]:
     """
     Score predicted questions using semantic similarity (embeddings).
@@ -85,10 +86,12 @@ async def score_predicted_questions_semantic(
             explanation += "No actual questions found in transcript."
         return 0, [], explanation
 
-    # Try semantic similarity with embeddings if available
-    use_semantic = google_client and embed_model
-    if use_semantic:
-        try:
+    # Always use semantic similarity with embeddings - require Google client
+    if not google_client or not embed_model:
+        explanation = "⚠️ Cannot compute semantic backtest: GOOGLE_AI_KEY or GOOGLE_EMBED_MODEL not configured. Semantic similarity requires Google embeddings."
+        return 0, [], explanation
+    
+    try:
             # Embed all questions
             predicted_embeddings = []
             actual_embeddings = []
@@ -156,56 +159,16 @@ async def score_predicted_questions_semantic(
             score = int(round(100.0 * (sum(sims) / max(1, len(sims)))))
             matches.sort(key=lambda t: t.get("similarity", 0.0), reverse=True)
             
-            explanation = _generate_backtest_explanation(score, len(predicted), len(actual), matches, semantic=True)
-            return score, matches, explanation
-            
-        except Exception as e:
-            # Fall through to lexical if semantic fails - log warning
-            import sys
-            print(f"⚠️ WARNING: Semantic similarity failed, falling back to lexical similarity: {e}", file=sys.stderr)
-            use_semantic = False
-
-    # Fallback to lexical similarity (Jaccard)
-    matches: List[Dict[str, Any]] = []
-    sims: List[float] = []
-    for i, pq in enumerate(predicted):
-        best_a = ""
-        best_s = 0.0
+        explanation = _generate_backtest_explanation(score, len(predicted), len(actual), matches, semantic=True)
+        return score, matches, explanation
         
-        # Get justice info if available
-        justice_id = ""
-        justice_name = ""
-        if predicted_with_justice and i < len(predicted_with_justice):
-            _, justice_id, justice_name = predicted_with_justice[i]
-        
-        for aq in actual:
-            s = jaccard_similarity(pq, aq)
-            if s > best_s:
-                best_s = s
-                best_a = aq
-        sims.append(best_s)
-        
-        # Extract citations
-        from utils.citations import extract_case_citations
-        pred_citations = extract_case_citations(pq)
-        actual_citations = extract_case_citations(best_a)
-        
-        matches.append({
-            "predicted": pq,
-            "best_actual": best_a,
-            "similarity": float(best_s),
-            "justice_id": justice_id,
-            "justice_name": justice_name,
-            "predicted_citations": pred_citations,
-            "actual_citations": actual_citations,
-        })
-
-    score = int(round(100.0 * (sum(sims) / max(1, len(sims)))))
-    matches.sort(key=lambda t: t.get("similarity", 0.0), reverse=True)
-    
-    explanation = _generate_backtest_explanation(score, len(predicted), len(actual), matches, semantic=False)
-    
-    return score, matches, explanation
+    except Exception as e:
+        # If semantic similarity fails, raise error rather than falling back to lexical
+        import sys
+        error_msg = f"Semantic similarity failed: {str(e)}"
+        print(f"⚠️ ERROR: {error_msg}", file=sys.stderr)
+        explanation = f"⚠️ Backtest failed: {error_msg}. Please check GOOGLE_AI_KEY and GOOGLE_EMBED_MODEL configuration."
+        return 0, [], explanation
 
 
 def score_predicted_questions(
