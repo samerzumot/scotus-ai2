@@ -668,27 +668,47 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                     transcript_text = transcript.get("transcript_text", "")
                                     if transcript_text:
                                         # Find the question in transcript and extract longer context
-                                        best_actual_lower = best_actual.lower()
+                                        best_actual_lower = best_actual.lower().strip()
                                         transcript_lower = transcript_text.lower()
                                         
-                                        # Find position of the question in transcript
+                                        # Find position of the question in transcript (try exact match first)
                                         question_pos = transcript_lower.find(best_actual_lower)
+                                        
+                                        # If not found, try finding a shorter substring (first 50 chars)
+                                        if question_pos == -1 and len(best_actual_lower) > 50:
+                                            question_pos = transcript_lower.find(best_actual_lower[:50])
+                                        
                                         if question_pos != -1:
-                                            # Extract longer context (1000 chars before and after)
-                                            context_start = max(0, question_pos - 1000)
-                                            context_end = min(len(transcript_text), question_pos + len(best_actual) + 1000)
+                                            # Extract longer context (1500 chars before and after for better context)
+                                            context_start = max(0, question_pos - 1500)
+                                            context_end = min(len(transcript_text), question_pos + len(best_actual) + 1500)
                                             context_snippet = transcript_text[context_start:context_end]
                                             
-                                            # Clean up snippet
-                                            context_snippet = re.sub(r'\s+', ' ', context_snippet).strip()
+                                            # Clean up snippet (preserve some line breaks for readability)
+                                            context_snippet = re.sub(r'[ \t]+', ' ', context_snippet)  # Normalize spaces
+                                            context_snippet = re.sub(r'\n{3,}', '\n\n', context_snippet)  # Max 2 newlines
+                                            context_snippet = context_snippet.strip()
                                             
                                             # Show in expandable section
-                                            with st.expander("📄 View full context from transcript"):
-                                                st.markdown(f"*...{context_snippet}...*")
-                                                
+                                            with st.expander("📄 View full context from transcript (3000 chars)"):
                                                 # Highlight the actual question in the snippet
-                                                st.markdown("---")
-                                                st.markdown("**Question highlighted above**")
+                                                highlighted_snippet = context_snippet
+                                                # Try to bold the question text
+                                                if best_actual in context_snippet:
+                                                    highlighted_snippet = highlighted_snippet.replace(
+                                                        best_actual,
+                                                        f"**{best_actual}**"
+                                                    )
+                                                elif best_actual[:100] in context_snippet:
+                                                    # Partial match
+                                                    partial = best_actual[:100]
+                                                    highlighted_snippet = highlighted_snippet.replace(
+                                                        partial,
+                                                        f"**{partial}...**"
+                                                    )
+                                                
+                                                st.markdown(highlighted_snippet)
+                                                st.caption(f"*Context: {len(context_snippet)} characters around the matching question*")
                                 
                                 # Link to transcript if available
                                 if transcript_url:
