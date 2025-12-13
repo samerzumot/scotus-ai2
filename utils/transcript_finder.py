@@ -30,6 +30,7 @@ def find_oyez_transcript_url(case_name: str, term: Optional[int] = None) -> Opti
     
     Note: This generates estimated URLs. Oyez uses specific slugs that may not match
     our generated slug. The URL should be verified before use.
+    For accurate URLs, use find_oyez_url_via_search() with Google Custom Search API.
     """
     if not case_name:
         return None
@@ -63,6 +64,29 @@ def find_oyez_transcript_url(case_name: str, term: Optional[int] = None) -> Opti
         return url
     
     return None
+
+
+async def find_oyez_transcript_url_async(
+    case_name: str,
+    term: Optional[int] = None,
+    *,
+    session: aiohttp.ClientSession,
+    use_search: bool = True,
+) -> Optional[str]:
+    """
+    Find Oyez transcript URL, optionally using Google Custom Search API for accuracy.
+    
+    If use_search=True and Google Search API is configured, uses search to find accurate URL.
+    Otherwise, falls back to estimated URL generation.
+    """
+    if use_search:
+        from utils.oyez_search import find_oyez_url_via_search
+        search_result = await find_oyez_url_via_search(case_name, term, session=session)
+        if search_result:
+            return search_result
+    
+    # Fallback to estimated URL
+    return find_oyez_transcript_url(case_name, term)
 
 
 def find_scotus_transcript_url(case_name: str, term: Optional[int] = None, docket: Optional[str] = None) -> Optional[str]:

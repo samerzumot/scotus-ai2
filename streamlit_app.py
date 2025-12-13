@@ -752,13 +752,30 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                             case_link = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{year}/{docket_clean}.pdf"
                             link_source = "scotus.gov (estimated)"
                             break
-                # Priority 3: Try to find Oyez URL (but mark as unverified)
+                # Priority 3: Try to find Oyez URL using Google Search API (accurate) or fallback to estimated
                 else:
-                    from utils.transcript_finder import find_oyez_transcript_url
-                    oyez_url = find_oyez_transcript_url(case.case_name, term=case.term)
+                    async def _find_oyez():
+                        session = await get_session_async()
+                        try:
+                            from utils.transcript_finder import find_oyez_transcript_url_async
+                            return await find_oyez_transcript_url_async(
+                                case.case_name,
+                                term=case.term,
+                                session=session,
+                                use_search=True,  # Use Google Search API if available
+                            )
+                        finally:
+                            await session.close()
+                    
+                    oyez_url = run_async(_find_oyez())
                     if oyez_url:
                         case_link = oyez_url
-                        link_source = "oyez.org (estimated)"
+                        # Check if it came from search (more accurate) or estimation
+                        google_search_key = (os.getenv("GOOGLE_SEARCH_KEY") or "").strip()
+                        if google_search_key:
+                            link_source = "oyez.org (verified via search)"
+                        else:
+                            link_source = "oyez.org (estimated)"
                 
                 if case_link:
                     case_display = f"[{case.case_name}]({case_link})"
