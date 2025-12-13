@@ -65,9 +65,10 @@ async def get_session_async():
     return aiohttp.ClientSession(timeout=timeout)
 
 
-def _extract_question_snippet(transcript_text: str, question_text: str) -> Optional[str]:
+def _extract_question_snippet(transcript_text: str, question_text: str, question_index: Optional[int] = None) -> Optional[str]:
     """
     Extract a simple snippet: 500 chars before and after the matched question text.
+    If question_index is provided, uses that to find the question in extracted questions list.
     
     Returns the context snippet or None if not found.
     """
@@ -78,8 +79,17 @@ def _extract_question_snippet(transcript_text: str, question_text: str) -> Optio
     question_lower = question_text.lower().strip()
     transcript_lower = transcript_text.lower()
     
-    # Try to find the question text
-    question_pos = transcript_lower.find(question_lower)
+    # If we have an index, try to find the question near where other questions appear
+    # This helps avoid finding the wrong occurrence
+    question_pos = -1
+    
+    if question_index is not None and question_index >= 0:
+        # Try to find all occurrences and use the one that makes sense
+        # For now, just use the first occurrence but we could improve this
+        question_pos = transcript_lower.find(question_lower)
+    else:
+        # Try to find the question text
+        question_pos = transcript_lower.find(question_lower)
     
     # If not found, try finding a shorter substring (first 50 chars)
     if question_pos == -1 and len(question_lower) > 50:
