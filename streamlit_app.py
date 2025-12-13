@@ -661,13 +661,40 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                 # Link to transcript if available
                                 if transcript_url:
                                     st.markdown(f"🔗 [View in transcript]({transcript_url})")
-                                st.progress(similarity, text=f"Similarity: {similarity * 100:.0f}%")
+                                st.progress(similarity, text=f"Embedding Similarity: {similarity * 100:.0f}%")
+                                
+                                # Use Gemini to analyze semantic match
+                                google_key = (os.getenv("GOOGLE_AI_KEY") or "").strip()
+                                if google_key:
+                                    with st.spinner("🤖 Analyzing semantic match with Gemini..."):
+                                        try:
+                                            google_client = GoogleInferenceClient(api_key=google_key)
+                                            semantic_analysis = run_async(
+                                                analyze_question_semantic_match(
+                                                    question.question,
+                                                    best_actual,
+                                                    google_client,
+                                                )
+                                            )
+                                            if semantic_analysis.get("semantic_match"):
+                                                st.success(f"✅ **Semantic Match**: {semantic_analysis.get('explanation', '')}")
+                                                if semantic_analysis.get("key_topics_aligned"):
+                                                    st.caption(f"🔑 Aligned topics: {', '.join(semantic_analysis['key_topics_aligned'][:5])}")
+                                            else:
+                                                st.info(f"ℹ️ **Semantic Analysis**: {semantic_analysis.get('explanation', '')}")
+                                        except Exception as e:
+                                            st.caption(f"⚠️ Semantic analysis unavailable: {str(e)[:100]}")
                     
-                    # Show topic mentions in transcript if available
+                    # Show topic mentions in transcript if available (with progress indicator)
                     if transcript_url and transcript:
                         transcript_text = transcript.get("transcript_text", "")
                         if transcript_text and key_topics:
+                            # Show progress indicator
+                            topic_status = st.empty()
+                            topic_status.info("🔍 Searching for key topics in justice questions...")
                             topic_mentions = find_topic_mentions_in_transcript(transcript_text, key_topics)
+                            topic_status.empty()
+                            
                             if topic_mentions:
                                 st.divider()
                                 st.markdown("**🔍 Key Topics Found in Transcript:**")
@@ -676,6 +703,8 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                         st.markdown(f"*...{mention['snippet']}...*")
                                         if transcript_url:
                                             st.caption(f"🔗 [View in transcript]({transcript_url})")
+                            else:
+                                st.caption("ℹ️ No mentions of key topics found in justice questions")
                     
                     if question.what_it_tests:
                         st.divider()
@@ -700,22 +729,36 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                 case_display = case.case_name
                 case_link = None
                 
+                # Priority 1: Use provided transcript_url (already verified)
                 if case.transcript_url:
                     case_link = case.transcript_url
+                    link_source = "verified"
+                # Priority 2: Use docket to generate SCOTUS.gov URL
                 elif case.docket:
                     # Generate SCOTUS.gov transcript URL from docket
-                    # Format: 21-1234 -> 21_1234.pdf
-                    docket_formatted = case.docket.replace('-', '_')
-                    case_link = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{docket_formatted}.pdf"
+                    # Format: 21-1234 -> 21_1234.pdf (but actual format may vary)
+                    docket_clean = case.docket.replace('-', '_')
+                    if case.term:
+                        case_link = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{case.term}/{docket_clean}.pdf"
+                        link_source = "scotus.gov"
+                    else:
+                        # Try recent terms
+                        for year in range(2024, 2019, -1):
+                            case_link = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{year}/{docket_clean}.pdf"
+                            link_source = "scotus.gov (estimated)"
+                            break
+                # Priority 3: Try to find Oyez URL (but mark as unverified)
                 else:
-                    # Try to find transcript URL from case name
-                    from utils.transcript_finder import find_transcript_urls
-                    candidates = find_transcript_urls(case.case_name, term=case.term)
-                    if candidates:
-                        case_link = candidates[0]
+                    from utils.transcript_finder import find_oyez_transcript_url
+                    oyez_url = find_oyez_transcript_url(case.case_name, term=case.term)
+                    if oyez_url:
+                        case_link = oyez_url
+                        link_source = "oyez.org (estimated)"
                 
                 if case_link:
                     case_display = f"[{case.case_name}]({case_link})"
+                    if link_source and "estimated" in link_source:
+                        case_display += f" ⚠️ (link may not be accurate)"
                 
                 st.markdown(f"**{case_display}**")
                 if case.term:
@@ -724,6 +767,8 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                     st.caption(f"Tags: {', '.join(case.tags)}")
                 if case.outcome:
                     st.caption(f"Outcome: {case.outcome}")
+                if case.docket:
+                    st.caption(f"Docket: {case.docket}")
                 st.divider()
 
 
