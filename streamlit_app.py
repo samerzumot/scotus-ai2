@@ -116,37 +116,25 @@ def _extract_question_snippet(transcript_text: str, question_text: str) -> Optio
                 break
     
     # Find the end of the question - look for the next speaker or end of question
-    # Search forward from question_start (not question_pos) to capture the full question
-    after_question_start = transcript_text[question_start:]
+    # Search forward from question_pos to find where the question ends
+    after_question = transcript_text[question_pos:]
     
     # Look for the next speaker (counsel or another justice) to mark the end of the question
-    # Include GENERAL to detect counsel responses (e.g., "GENERAL SAUER:")
     next_speaker_pattern = r'(?:\n\s*)((?:MR\.|MS\.|MRS\.|COUNSEL|GENERAL|CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z])'
-    next_speaker_match = re.search(next_speaker_pattern, after_question_start, re.IGNORECASE | re.MULTILINE)
+    next_speaker_match = re.search(next_speaker_pattern, after_question, re.IGNORECASE | re.MULTILINE)
     
     if next_speaker_match:
-        # Check if this is counsel (answer) or another justice (next question)
-        speaker_label = next_speaker_match.group(1).upper()
-        is_counsel = any(c in speaker_label for c in ['MR.', 'MS.', 'MRS.', 'COUNSEL', 'GENERAL'])
-        
-        if is_counsel:
-            # Question ends before counsel response
-            question_end_pos = question_start + next_speaker_match.start(1)
-        else:
-            # Next speaker is another justice - question ends before that
-            question_end_pos = question_start + next_speaker_match.start(1)
+        # Question ends before the next speaker
+        question_end_pos = question_pos + next_speaker_match.start(1)
     else:
         # No next speaker found - look for the last question mark in a reasonable range
-        # Search up to 800 chars after question_start to capture multi-part questions
-        search_end = min(len(transcript_text), question_start + 800)
-        question_section = transcript_text[question_start:search_end]
-        # Find the last question mark in this section
+        search_end = min(len(transcript_text), question_pos + 500)
+        question_section = transcript_text[question_pos:search_end]
         last_q_pos = question_section.rfind('?')
         if last_q_pos != -1:
-            question_end_pos = question_start + last_q_pos + 1
+            question_end_pos = question_pos + last_q_pos + 1
         else:
-            # No question mark found, use a reasonable end point
-            question_end_pos = min(len(transcript_text), question_start + 500)
+            question_end_pos = min(len(transcript_text), question_pos + 300)
     
     # Extract the full question snippet (from justice label to end of question)
     question_full = transcript_text[question_start:question_end_pos].strip()
