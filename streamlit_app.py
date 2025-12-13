@@ -640,6 +640,9 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                     
                     st.markdown(f"**Predicted Question:** {question.question}")
                     
+                    # Extract key topics from predicted question
+                    key_topics = extract_key_topics(question.question)
+                    
                     # Show matching actual question if available
                     if match_info:
                         if isinstance(match_info, dict):
@@ -657,6 +660,20 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                 if transcript_url:
                                     st.markdown(f"🔗 [View in transcript]({transcript_url})")
                                 st.progress(similarity, text=f"Similarity: {similarity * 100:.0f}%")
+                    
+                    # Show topic mentions in transcript if available
+                    if transcript_url and transcript:
+                        transcript_text = transcript.get("transcript_text", "")
+                        if transcript_text and key_topics:
+                            topic_mentions = find_topic_mentions_in_transcript(transcript_text, key_topics)
+                            if topic_mentions:
+                                st.divider()
+                                st.markdown("**🔍 Key Topics Found in Transcript:**")
+                                for mention in topic_mentions[:3]:  # Show top 3 mentions
+                                    with st.expander(f"📌 '{mention['topic']}' mentioned"):
+                                        st.markdown(f"*...{mention['snippet']}...*")
+                                        if transcript_url:
+                                            st.caption(f"🔗 [View in transcript]({transcript_url})")
                     
                     if question.what_it_tests:
                         st.divider()
@@ -677,14 +694,26 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         if prediction.retrieved_cases:
             st.header("📚 Similar Historical Cases")
             for case in prediction.retrieved_cases:
-                # Build case name with link if transcript available
+                # Build case name with link - always try to create a link
                 case_display = case.case_name
+                case_link = None
+                
                 if case.transcript_url:
-                    case_display = f"[{case.case_name}]({case.transcript_url})"
+                    case_link = case.transcript_url
                 elif case.docket:
                     # Generate SCOTUS.gov transcript URL from docket
-                    scotus_url = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{case.docket.replace('-', '_')}.pdf"
-                    case_display = f"[{case.case_name}]({scotus_url})"
+                    # Format: 21-1234 -> 21_1234.pdf
+                    docket_formatted = case.docket.replace('-', '_')
+                    case_link = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{docket_formatted}.pdf"
+                else:
+                    # Try to find transcript URL from case name
+                    from utils.transcript_finder import find_transcript_urls
+                    candidates = find_transcript_urls(case.case_name, term=case.term)
+                    if candidates:
+                        case_link = candidates[0]
+                
+                if case_link:
+                    case_display = f"[{case.case_name}]({case_link})"
                 
                 st.markdown(f"**{case_display}**")
                 if case.term:
