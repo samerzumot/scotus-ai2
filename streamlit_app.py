@@ -90,8 +90,8 @@ def _extract_question_snippet(transcript_text: str, question_text: str) -> Optio
         return None
     
     # Find the start of the question (look backwards for "JUSTICE" or "CHIEF JUSTICE")
-    # Search backwards from question_pos to find the justice label - use larger window to capture full multi-part questions
-    search_start = max(0, question_pos - 1000)  # Look back up to 1000 chars to capture full question
+    # Use a reasonable window - not too large to avoid finding wrong justice
+    search_start = max(0, question_pos - 500)  # Look back up to 500 chars
     before_question = transcript_text[search_start:question_pos]
     
     # Pattern to find justice question start: "JUSTICE [NAME]:" or "CHIEF JUSTICE [NAME]:"
