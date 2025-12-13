@@ -101,15 +101,27 @@ async def score_predicted_questions_semantic(
             try:
                 emb = await google_client.embed_text(model=embed_model, text=pq[:500])
                 predicted_embeddings.append(emb)
-            except Exception:
-                predicted_embeddings.append(None)
+            except Exception as e:
+                # Log the error but don't fail completely - return error message
+                import sys
+                error_msg = f"Failed to embed predicted question: {str(e)}"
+                print(f"⚠️ ERROR: {error_msg}", file=sys.stderr)
+                # If embedding fails, we can't compute similarity - return error
+                explanation = f"⚠️ Backtest failed: {error_msg}. Please check GOOGLE_AI_KEY and GOOGLE_EMBED_MODEL configuration."
+                return 0, [], explanation
         
         for aq in actual:
             try:
                 emb = await google_client.embed_text(model=embed_model, text=aq[:500])
                 actual_embeddings.append(emb)
-            except Exception:
-                actual_embeddings.append(None)
+            except Exception as e:
+                # Log the error but don't fail completely - return error message
+                import sys
+                error_msg = f"Failed to embed actual question: {str(e)}"
+                print(f"⚠️ ERROR: {error_msg}", file=sys.stderr)
+                # If embedding fails, we can't compute similarity - return error
+                explanation = f"⚠️ Backtest failed: {error_msg}. Please check GOOGLE_AI_KEY and GOOGLE_EMBED_MODEL configuration."
+                return 0, [], explanation
         
         # Extract major topic words from predicted questions for filtering
         from utils.topic_extractor import extract_key_topics
