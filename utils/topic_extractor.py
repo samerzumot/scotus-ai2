@@ -17,12 +17,12 @@ def extract_key_topics(question: str) -> List[str]:
     
     # Extract quoted phrases (often key legal concepts)
     quoted = re.findall(r'"([^"]+)"', question)
-    topics.update(quoted)
+    topics.update(set(quoted))
     
     # Extract capitalized phrases (proper nouns, case names, institutions)
     # Look for patterns like "Federal Reserve", "Humphrey's Executor", etc.
     capitalized = re.findall(r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b', question)
-    topics.update(c for c in capitalized if len(c) > 3)
+    topics.update(set(c for c in capitalized if len(c) > 3))
     
     # Extract important legal/technical terms (common patterns)
     legal_terms = [
@@ -40,7 +40,14 @@ def extract_key_topics(question: str) -> List[str]:
     
     for pattern in legal_terms:
         matches = re.findall(pattern, question, re.IGNORECASE)
-        topics.update(matches)
+        # Flatten list of tuples if needed
+        flat_matches = []
+        for m in matches:
+            if isinstance(m, tuple):
+                flat_matches.extend(m)
+            else:
+                flat_matches.append(m)
+        topics.update(set(flat_matches))
     
     # Extract case names (patterns like "X v. Y" or "X's Executor")
     case_patterns = [
@@ -49,7 +56,7 @@ def extract_key_topics(question: str) -> List[str]:
     ]
     for pattern in case_patterns:
         matches = re.findall(pattern, question)
-        topics.update(matches)
+        topics.update(set(matches))
     
     # Extract important nouns (longer words that are likely significant)
     # Filter out common words
@@ -59,7 +66,7 @@ def extract_key_topics(question: str) -> List[str]:
     }
     words = re.findall(r'\b[a-z]{5,}\b', question)
     significant_words = [w for w in words if w not in common_words and len(w) > 4]
-    topics.update(significant_words[:5])  # Limit to top 5
+    topics.update(set(significant_words[:5]))  # Limit to top 5
     
     # Clean and normalize
     cleaned = []
