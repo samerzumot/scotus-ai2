@@ -12,17 +12,30 @@ def extract_key_topics(question: str) -> List[str]:
     
     Returns a list of significant terms that should be searched for in transcripts.
     """
-    question = question.lower()
+    # Keep original for capitalized phrase extraction
+    question_original = question
+    question_lower = question.lower()
     topics: Set[str] = set()
     
     # Extract quoted phrases (often key legal concepts)
-    quoted = re.findall(r'"([^"]+)"', question)
-    topics.update(set(quoted))
+    quoted = re.findall(r'"([^"]+)"', question_original)
+    topics.update(set(q.lower() for q in quoted))
     
     # Extract capitalized phrases (proper nouns, case names, institutions)
     # Look for patterns like "Federal Reserve", "Humphrey's Executor", etc.
-    capitalized = re.findall(r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b', question)
-    topics.update(set(c for c in capitalized if len(c) > 3))
+    # Extract BEFORE lowercasing to catch proper nouns
+    capitalized = re.findall(r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b', question_original)
+    for cap_phrase in capitalized:
+        if len(cap_phrase) > 3:
+            # Add both original and lowercase versions
+            topics.add(cap_phrase.lower())
+            # Also extract individual capitalized words as potential topics
+            words = cap_phrase.split()
+            if len(words) >= 2:
+                # For multi-word phrases, also add the key words separately
+                for word in words:
+                    if len(word) > 4 and word[0].isupper():
+                        topics.add(word.lower())
     
     # Extract important legal/technical terms (common patterns)
     legal_terms = [
@@ -39,7 +52,7 @@ def extract_key_topics(question: str) -> List[str]:
     ]
     
     for pattern in legal_terms:
-        matches = re.findall(pattern, question, re.IGNORECASE)
+        matches = re.findall(pattern, question_lower, re.IGNORECASE)
         # Flatten list of tuples if needed
         flat_matches = []
         for m in matches:
@@ -48,6 +61,10 @@ def extract_key_topics(question: str) -> List[str]:
             else:
                 flat_matches.append(m)
         topics.update(set(flat_matches))
+    
+    # Also extract "Federal Reserve" as a standalone topic if it appears
+    if re.search(r'\bfederal\s+reserve\b', question_lower, re.IGNORECASE):
+        topics.add('federal reserve')
     
     # Extract case names (patterns like "X v. Y" or "X's Executor")
     case_patterns = [
@@ -81,9 +98,77 @@ def extract_key_topics(question: str) -> List[str]:
     return cleaned[:10]  # Return top 10 most significant topics
 
 
+def _extract_oral_arguments_content(transcript_text: str) -> str:
+    """
+    Extract only the oral arguments content, removing headers, footers, and metadata.
+    
+    Looks for common patterns that indicate the start/end of actual oral arguments.
+    """
+    if not transcript_text:
+        return ""
+    
+    # Common patterns that indicate start of oral arguments
+    start_patterns = [
+        r'(?:^|\n)\s*(?:ORAL\s+ARGUMENT|ORAL\s+ARGUMENTS|ARGUMENT\s+BEGINS?|ARGUMENT\s+OF)',
+        r'(?:^|\n)\s*(?:CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z]',
+        r'(?:^|\n)\s*(?:MR\.|MS\.|MRS\.)\s+[A-Z]',
+        r'(?:^|\n)\s*(?:COUNSEL|ATTORNEY)',
+    ]
+    
+    # Common patterns that indicate end of oral arguments
+    end_patterns = [
+        r'(?:^|\n)\s*(?:ARGUMENT\s+CONCLUDED|ARGUMENT\s+ENDS?|ADJOURNED)',
+        r'(?:^|\n)\s*(?:CHIEF\s+JUSTICE.*?ADJOURNED)',
+        r'(?:^|\n)\s*(?:THE\s+CASE\s+IS\s+SUBMITTED)',
+    ]
+    
+    # Find start of oral arguments
+    start_pos = 0
+    for pattern in start_patterns:
+        match = re.search(pattern, transcript_text, re.IGNORECASE | re.MULTILINE)
+        if match:
+            start_pos = match.start()
+            break
+    
+    # Find end of oral arguments
+    end_pos = len(transcript_text)
+    for pattern in end_patterns:
+        match = re.search(pattern, transcript_text[start_pos:], re.IGNORECASE | re.MULTILINE)
+        if match:
+            end_pos = start_pos + match.start()
+            break
+    
+    # Extract the oral arguments section
+    oral_args = transcript_text[start_pos:end_pos]
+    
+    # Remove common header/footer patterns
+    # Remove page numbers and headers
+    oral_args = re.sub(r'(?:^|\n)\s*\d+\s*(?:\n|$)', '\n', oral_args, flags=re.MULTILINE)
+    oral_args = re.sub(r'(?:^|\n)\s*(?:Page\s+\d+|PAGE\s+\d+)\s*(?:\n|$)', '\n', oral_args, flags=re.MULTILINE)
+    
+    # Remove case name headers that repeat
+    lines = oral_args.split('\n')
+    filtered_lines = []
+    seen_headers = set()
+    for line in lines:
+        line_stripped = line.strip()
+        # Skip very short lines that are likely headers/footers
+        if len(line_stripped) < 3:
+            continue
+        # Skip lines that look like headers (all caps, very short)
+        if line_stripped.isupper() and len(line_stripped) < 50:
+            if line_stripped in seen_headers:
+                continue  # Skip duplicate headers
+            seen_headers.add(line_stripped)
+        filtered_lines.append(line)
+    
+    return '\n'.join(filtered_lines)
+
+
 def find_topic_mentions_in_transcript(transcript_text: str, topics: List[str], context_chars: int = 200) -> List[dict]:
     """
     Find mentions of key topics in the transcript and return context snippets.
+    Only searches within the oral arguments content, excluding headers/footers.
     
     Returns a list of dicts with:
     - topic: the topic that was found
@@ -93,7 +178,13 @@ def find_topic_mentions_in_transcript(transcript_text: str, topics: List[str], c
     if not transcript_text or not topics:
         return []
     
-    transcript_lower = transcript_text.lower()
+    # Extract only oral arguments content, excluding headers/footers
+    oral_args_text = _extract_oral_arguments_content(transcript_text)
+    if not oral_args_text:
+        # Fallback to full text if extraction fails
+        oral_args_text = transcript_text
+    
+    transcript_lower = oral_args_text.lower()
     mentions = []
     
     for topic in topics:
