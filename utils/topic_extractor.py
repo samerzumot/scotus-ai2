@@ -13,7 +13,7 @@ def extract_key_topics(question: str) -> List[str]:
     Returns a list of significant terms that should be searched for in transcripts.
     """
     question = question.lower()
-    topics: Set[str] = []
+    topics: Set[str] = set()
     
     # Extract quoted phrases (often key legal concepts)
     quoted = re.findall(r'"([^"]+)"', question)
