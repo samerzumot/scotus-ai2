@@ -553,6 +553,8 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                 actual_questions = extract_questions_from_transcript(
                     transcript.get("transcript_text") or "", limit=100
                 )
+                # Pass questions with justice info for better matching
+                predicted_questions_with_justice = [(q.question, q.justice_id, q.justice_name) for q in prediction.questions]
                 predicted_questions = [q.question for q in prediction.questions]
                 
                 backtest_status.text("📊 Scoring questions...")
@@ -588,7 +590,8 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                 actual_questions,
                                 google_client=google_client,
                                 embed_model=embed_model,
-                                use_gemini_for_selection=True,  # Use Gemini for final selection
+                                predicted_with_justice=predicted_questions_with_justice,
+                                use_gemini_for_selection=True,
                             )
                             return await asyncio.wait_for(score_task, timeout=30.0)
                         
@@ -610,7 +613,8 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                 actual_questions,
                                 google_client=google_client,
                                 embed_model=embed_model,
-                                use_gemini_for_selection=True,  # Use Gemini for final selection
+                                predicted_with_justice=predicted_questions_with_justice,
+                                use_gemini_for_selection=True,
                             )
                             return await asyncio.wait_for(score_task, timeout=30.0)
                         
