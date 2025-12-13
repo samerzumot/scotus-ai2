@@ -8,7 +8,8 @@ from typing import List, Set
 
 def extract_key_topics(question: str) -> List[str]:
     """
-    Extract key topics, entities, and important terms from a question.
+    Extract key topics, entities, and important terms from a question using general patterns.
+    No hardcoded keywords - purely pattern-based extraction.
     
     Returns a list of significant terms that should be searched for in transcripts.
     """
@@ -21,50 +22,62 @@ def extract_key_topics(question: str) -> List[str]:
     quoted = re.findall(r'"([^"]+)"', question_original)
     topics.update(set(q.lower() for q in quoted))
     
-    # Extract capitalized phrases (proper nouns, case names, institutions)
-    # Look for patterns like "Federal Reserve", "Humphrey's Executor", etc.
-    # Extract BEFORE lowercasing to catch proper nouns
-    capitalized = re.findall(r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b', question_original)
-    for cap_phrase in capitalized:
-        if len(cap_phrase) > 3:
-            # Add both original and lowercase versions
-            topics.add(cap_phrase.lower())
-            # Also extract individual capitalized words as potential topics
-            words = cap_phrase.split()
-            if len(words) >= 2:
-                # For multi-word phrases, also add the key words separately
-                for word in words:
-                    if len(word) > 4 and word[0].isupper():
-                        topics.add(word.lower())
+    # Extract multi-word capitalized phrases (proper nouns, case names, institutions)
+    # Pattern: One or more capitalized words in sequence
+    # Examples: "Federal Reserve", "Humphrey's Executor", "Supreme Court"
+    capitalized_phrases = re.findall(r'\b([A-Z][a-z]+(?:\'[a-z]+)?(?:\s+[A-Z][a-z]+)+)\b', question_original)
+    for phrase in capitalized_phrases:
+        if len(phrase) > 3:
+            # Add lowercase version for searching
+            topics.add(phrase.lower())
+            # For multi-word phrases, also add individual significant words
+            words = re.findall(r'\b([A-Z][a-z]{4,})\b', phrase)
+            for word in words:
+                topics.add(word.lower())
     
-    # Extract important legal/technical terms (common patterns)
-    legal_terms = [
-        r'\b(federal reserve|federal reserve board|chairman of the federal reserve)\b',
-        r'\b(monetary policy|economic stability|interest rates)\b',
-        r'\b(overrule|overturn|precedent|stare decisis)\b',
-        r'\b(limiting principle|constitutional principle)\b',
-        r'\b(executive power|presidential power|removal power)\b',
-        r'\b(administrative law|agency|independent agency)\b',
-        r'\b(first amendment|free speech|free expression)\b',
-        r'\b(due process|equal protection|fourteenth amendment)\b',
-        r'\b(standing|jurisdiction|mootness)\b',
-        r'\b(strict scrutiny|intermediate scrutiny|rational basis)\b',
+    # Extract single capitalized words that are likely significant (proper nouns)
+    # Only if they're longer than 4 chars to avoid common words
+    single_caps = re.findall(r'\b([A-Z][a-z]{4,})\b', question_original)
+    topics.update(set(w.lower() for w in single_caps))
+    
+    # Extract case names (patterns like "X v. Y" or "X's Executor")
+    case_patterns = [
+        r'\b([A-Z][a-z]+(?:\'s)?\s+(?:Executor|Case|Decision|Doctrine))\b',
+        r'\b([A-Z][a-z]+\s+v\.\s+[A-Z][a-z]+)\b',
     ]
+    for pattern in case_patterns:
+        matches = re.findall(pattern, question_original)
+        topics.update(set(m.lower() for m in matches))
     
-    for pattern in legal_terms:
-        matches = re.findall(pattern, question_lower, re.IGNORECASE)
-        # Flatten list of tuples if needed
-        flat_matches = []
-        for m in matches:
-            if isinstance(m, tuple):
-                flat_matches.extend(m)
-            else:
-                flat_matches.append(m)
-        topics.update(set(flat_matches))
+    # Extract multi-word technical/legal phrases (general pattern)
+    # Pattern: 2-4 word phrases where words are 4+ chars (likely significant terms)
+    # This catches phrases like "monetary policy", "limiting principle", "economic stability"
+    multi_word_phrases = re.findall(
+        r'\b([a-z]{4,}(?:\s+[a-z]{4,}){1,3})\b',
+        question_lower
+    )
+    # Filter out common phrases and keep only substantial ones
+    common_phrases = {
+        'what would', 'what does', 'does this', 'this mean', 'would be',
+        'can fire', 'for disagreeing', 'and what', 'what is', 'is the'
+    }
+    for phrase in multi_word_phrases:
+        if len(phrase) > 8 and phrase not in common_phrases:
+            # Check if it's a meaningful phrase (not just filler)
+            words = phrase.split()
+            if len(words) >= 2 and all(len(w) >= 4 for w in words):
+                topics.add(phrase)
     
-    # Also extract "Federal Reserve" as a standalone topic if it appears
-    if re.search(r'\bfederal\s+reserve\b', question_lower, re.IGNORECASE):
-        topics.add('federal reserve')
+    # Extract important single words (longer words that are likely significant)
+    # Filter out common words
+    common_words = {
+        'what', 'this', 'that', 'would', 'could', 'should', 'does', 'mean',
+        'question', 'principle', 'consequence', 'disagree', 'policy', 'fire',
+        'mean', 'mean', 'president', 'chairman'
+    }
+    words = re.findall(r'\b[a-z]{5,}\b', question_lower)
+    significant_words = [w for w in words if w not in common_words and len(w) > 4]
+    topics.update(set(significant_words[:8]))  # Limit to top 8
     
     # Extract case names (patterns like "X v. Y" or "X's Executor")
     case_patterns = [
