@@ -319,7 +319,9 @@ def main():
                             case_name=r.case.case_name,
                             term=r.case.term,
                             tags=r.case.tags,
-                            outcome=r.case.outcome
+                            outcome=r.case.outcome,
+                            transcript_url=r.case.transcript_url,
+                            docket=r.case.docket
                         )
                         for r in retrieved_results
                     ]
@@ -633,38 +635,67 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                 backtest_status.empty()
                 st.warning(f"⚠️ Transcript not found at: {transcript_url}")
         
-        # Questions with matches
+        # Questions grouped by justice
         st.header("❓ Predicted Questions")
+        
+        # Group questions by justice
+        from utils.scotus import BENCH_ORDER, JUSTICE_NAMES
+        questions_by_justice = {}
         for question in prediction.questions:
-            match_info = matches_dict.get(question.question, None)
+            justice_id = question.justice_id
+            if justice_id not in questions_by_justice:
+                questions_by_justice[justice_id] = []
+            questions_by_justice[justice_id].append(question)
+        
+        # Display questions in bench order, grouped by justice
+        for justice_id in BENCH_ORDER:
+            if justice_id not in questions_by_justice:
+                continue
+            
+            justice_name = JUSTICE_NAMES.get(justice_id, justice_id)
+            questions = questions_by_justice[justice_id]
+            
+            # Use the first question's match info for the header
+            first_question = questions[0]
+            match_info = matches_dict.get(first_question.question, None)
             
             # Build expander title
-            title = f"**{question.justice_name}**"
+            title = f"**{justice_name}**"
             if match_info:
                 sim = match_info.get("similarity", 0.0) if isinstance(match_info, dict) else 0.0
                 title += f" ({sim * 100:.0f}% match)"
             
             with st.expander(title):
-                st.markdown(f"**Predicted Question:** {question.question}")
-                
-                # Show matching actual question if available
-                if match_info:
-                    if isinstance(match_info, dict):
-                        best_actual = match_info.get("best_actual", "")
-                        similarity = match_info.get("similarity", 0.0)
-                        actual_citations = match_info.get("actual_citations", [])
-                        
-                        if best_actual:
-                            st.divider()
-                            st.markdown("**📋 Best Matching Actual Question:**")
-                            st.markdown(f"{best_actual}")
-                            if actual_citations:
-                                st.caption(f"📚 Citations: {', '.join(actual_citations)}")
-                            st.progress(similarity, text=f"Similarity: {similarity * 100:.0f}%")
-                
-                if question.what_it_tests:
-                    st.divider()
-                    st.caption(f"*What it tests:* {question.what_it_tests}")
+                for question in questions:
+                    match_info = matches_dict.get(question.question, None)
+                    
+                    st.markdown(f"**Predicted Question:** {question.question}")
+                    
+                    # Show matching actual question if available
+                    if match_info:
+                        if isinstance(match_info, dict):
+                            best_actual = match_info.get("best_actual", "")
+                            similarity = match_info.get("similarity", 0.0)
+                            actual_citations = match_info.get("actual_citations", [])
+                            
+                            if best_actual:
+                                st.divider()
+                                st.markdown("**📋 Best Matching Actual Question:**")
+                                st.markdown(f"{best_actual}")
+                                if actual_citations:
+                                    st.caption(f"📚 Citations: {', '.join(actual_citations)}")
+                                # Link to transcript if available
+                                if transcript_url:
+                                    st.markdown(f"🔗 [View in transcript]({transcript_url})")
+                                st.progress(similarity, text=f"Similarity: {similarity * 100:.0f}%")
+                    
+                    if question.what_it_tests:
+                        st.divider()
+                        st.caption(f"*What it tests:* {question.what_it_tests}")
+                    
+                    # Add divider between questions if multiple
+                    if len(questions) > 1 and question != questions[-1]:
+                        st.divider()
         
         # Backtest summary (if available)
         if backtest_score is not None:
@@ -672,33 +703,27 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             st.metric("Question Match Score", f"{backtest_score}%")
             if backtest_explanation:
                 st.markdown(backtest_explanation)
-            
-            # Show top matches in detail
-            if matches_dict:
-                with st.expander("📋 All Question Matches"):
-                    for m in list(matches_dict.values())[:10]:
-                        if isinstance(m, dict):
-                            pred_q = m.get("predicted", "")
-                            actual_q = m.get("best_actual", "")
-                            sim = m.get("similarity", 0.0)
-                            justice_name = m.get("justice_name", "")
-                            
-                            if pred_q and actual_q:
-                                st.markdown(f"**{justice_name if justice_name else 'Question'}**")
-                                st.markdown(f"*Predicted:* {pred_q}")
-                                st.markdown(f"*Actual:* {actual_q}")
-                                st.progress(sim, text=f"Similarity: {sim * 100:.0f}%")
-                                st.divider()
         
-        # Retrieved cases
+        # Retrieved cases with links
         if prediction.retrieved_cases:
             st.header("📚 Similar Historical Cases")
             for case in prediction.retrieved_cases:
-                st.markdown(f"**{case.case_name}**")
+                # Build case name with link if transcript available
+                case_display = case.case_name
+                if case.transcript_url:
+                    case_display = f"[{case.case_name}]({case.transcript_url})"
+                elif case.docket:
+                    # Generate SCOTUS.gov transcript URL from docket
+                    scotus_url = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{case.docket.replace('-', '_')}.pdf"
+                    case_display = f"[{case.case_name}]({scotus_url})"
+                
+                st.markdown(f"**{case_display}**")
                 if case.term:
                     st.caption(f"Term {case.term}")
                 if case.tags:
                     st.caption(f"Tags: {', '.join(case.tags)}")
+                if case.outcome:
+                    st.caption(f"Outcome: {case.outcome}")
                 st.divider()
 
 

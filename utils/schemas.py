@@ -60,6 +60,8 @@ class RetrievedCaseRef(BaseModel):
     term: Optional[int] = None
     tags: List[str] = []
     outcome: Optional[str] = None
+    transcript_url: Optional[str] = None
+    docket: Optional[str] = None
 
 
 class OverallPrediction(BaseModel):
