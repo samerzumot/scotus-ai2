@@ -175,6 +175,33 @@ def _extract_question_snippet(transcript_text: str, question_text: str) -> Optio
     question_full = re.sub(r'[ \t]+', ' ', question_full)
     question_full = re.sub(r'\n{3,}', '\n\n', question_full)
     
+    # Remove transcript metadata/headers that might have been captured
+    # Remove lines that are just numbers or page numbers
+    lines = question_full.split('\n')
+    cleaned_lines = []
+    for line in lines:
+        line_stripped = line.strip()
+        # Skip lines that are just numbers or page numbers
+        if re.match(r'^\d+$', line_stripped):
+            continue
+        # Skip lines with "Heritage Reporting Corporation" or similar metadata
+        if 'heritage reporting' in line_stripped.lower() or ('official' in line_stripped.lower() and 'subject' in line_stripped.lower()):
+            continue
+        # Skip lines that are just number sequences
+        if re.match(r'^[\d\s]+$', line_stripped):
+            continue
+        cleaned_lines.append(line)
+    
+    question_full = '\n'.join(cleaned_lines).strip()
+    
+    # Verify that the extracted question actually contains the matched question text
+    # If not, it might be the wrong question - return None to avoid showing irrelevant content
+    if question_clean and len(question_clean) >= 10:
+        # Check if the matched text appears in the extracted question (first 1000 chars)
+        if question_clean.lower() not in question_full.lower()[:1000]:
+            # The extracted question doesn't contain the matched text - might be wrong
+            return None
+    
     return question_full
 
 
