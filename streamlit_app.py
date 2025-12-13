@@ -25,6 +25,7 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).parent))
 
 from utils.backtest import extract_questions_from_transcript, score_predicted_questions, score_predicted_questions_semantic
+from utils.google_inference import GoogleInferenceClient
 from utils.pdf import extract_text_from_pdf_bytes
 from utils.predictor import predict_votes_and_questions, _load_corpus_cached, _build_prompt, _coerce_prediction
 from utils.schemas import BacktestResult
