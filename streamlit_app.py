@@ -24,6 +24,8 @@ from dotenv import load_dotenv
 # Add utils to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+import re
+
 from utils.backtest import extract_questions_from_transcript, score_predicted_questions, score_predicted_questions_semantic
 from utils.google_inference import GoogleInferenceClient
 from utils.pdf import extract_text_from_pdf_bytes
@@ -660,6 +662,34 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                 st.markdown(f"{best_actual}")
                                 if actual_citations:
                                     st.caption(f"📚 Citations: {', '.join(actual_citations)}")
+                                
+                                # Show longer transcript snippet in expandable section
+                                if transcript_url and transcript:
+                                    transcript_text = transcript.get("transcript_text", "")
+                                    if transcript_text:
+                                        # Find the question in transcript and extract longer context
+                                        best_actual_lower = best_actual.lower()
+                                        transcript_lower = transcript_text.lower()
+                                        
+                                        # Find position of the question in transcript
+                                        question_pos = transcript_lower.find(best_actual_lower)
+                                        if question_pos != -1:
+                                            # Extract longer context (1000 chars before and after)
+                                            context_start = max(0, question_pos - 1000)
+                                            context_end = min(len(transcript_text), question_pos + len(best_actual) + 1000)
+                                            context_snippet = transcript_text[context_start:context_end]
+                                            
+                                            # Clean up snippet
+                                            context_snippet = re.sub(r'\s+', ' ', context_snippet).strip()
+                                            
+                                            # Show in expandable section
+                                            with st.expander("📄 View full context from transcript"):
+                                                st.markdown(f"*...{context_snippet}...*")
+                                                
+                                                # Highlight the actual question in the snippet
+                                                st.markdown("---")
+                                                st.markdown("**Question highlighted above**")
+                                
                                 # Link to transcript if available
                                 if transcript_url:
                                     st.markdown(f"🔗 [View in transcript]({transcript_url})")

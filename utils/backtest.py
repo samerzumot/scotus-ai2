@@ -211,6 +211,15 @@ async def score_predicted_questions_semantic(
             pred_citations = extract_case_citations(pq)
             actual_citations = extract_case_citations(best_a)
             
+            # Find the position of best_actual in the original transcript for context extraction
+            best_actual_position = -1
+            if best_a:
+                # Try to find the question in the original actual questions list to get its index
+                for idx, aq in enumerate(actual):
+                    if aq == best_a:
+                        best_actual_position = idx
+                        break
+            
             matches.append({
                 "predicted": pq,
                 "best_actual": best_a,
@@ -219,6 +228,7 @@ async def score_predicted_questions_semantic(
                 "justice_name": justice_name,
                 "predicted_citations": pred_citations,
                 "actual_citations": actual_citations,
+                "best_actual_index": best_actual_position,  # Store index for context extraction
             })
         
         score = int(round(100.0 * (sum(sims) / max(1, len(sims)))))
