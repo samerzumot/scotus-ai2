@@ -63,6 +63,7 @@ async def score_predicted_questions_semantic(
     google_client: Optional[Any] = None,  # GoogleInferenceClient, but avoid circular import
     embed_model: Optional[str] = None,
     predicted_with_justice: Optional[List[Tuple[str, str, str]]] = None,  # List of (question, justice_id, justice_name)
+    use_gemini_for_selection: bool = False,  # Whether to use Gemini for final selection
 ) -> Tuple[int, List[Dict[str, Any]], str]:
     """
     Score predicted questions using semantic similarity (embeddings).
