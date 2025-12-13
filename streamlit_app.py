@@ -67,10 +67,9 @@ async def get_session_async():
 
 def _extract_question_snippet(transcript_text: str, question_text: str) -> Optional[str]:
     """
-    Extract a longer snippet of the full question from the transcript.
-    Shows the complete question as it appears in the transcript, not just the matched portion.
+    Extract a simple snippet: 500 chars before and after the matched question text.
     
-    Returns the full question text (including justice name) or None if not found.
+    Returns the context snippet or None if not found.
     """
     if not transcript_text or not question_text:
         return None
@@ -89,61 +88,17 @@ def _extract_question_snippet(transcript_text: str, question_text: str) -> Optio
     if question_pos == -1:
         return None
     
-    # Find the start of the question (look backwards for "JUSTICE" or "CHIEF JUSTICE")
-    # Use a reasonable window - not too large to avoid finding wrong justice
-    search_start = max(0, question_pos - 500)  # Look back up to 500 chars
-    before_question = transcript_text[search_start:question_pos]
+    # Simple: extract 500 chars before and after the match
+    start = max(0, question_pos - 500)
+    end = min(len(transcript_text), question_pos + len(question_text) + 500)
     
-    # Pattern to find justice question start: "JUSTICE [NAME]:" or "CHIEF JUSTICE [NAME]:"
-    # Look for the last occurrence of a justice label before the question
-    justice_pattern = r'(?:^|\n)\s*((?:CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z][A-Z\s]+\s*:)'
-    justice_matches = list(re.finditer(justice_pattern, before_question, re.IGNORECASE | re.MULTILINE))
+    snippet = transcript_text[start:end].strip()
     
-    if justice_matches:
-        # Use the last (most recent) justice label before the question
-        # This ensures we capture the full question even if it spans multiple sentences
-        justice_match = justice_matches[-1]
-        question_start = search_start + justice_match.start(1)
-    else:
-        # Fallback: look for any line starting with JUSTICE before the question
-        lines = before_question.split('\n')
-        question_start = question_pos
-        for i in range(len(lines) - 1, -1, -1):
-            line = lines[i]
-            if re.match(r'^\s*(?:CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z]', line, re.IGNORECASE):
-                # Found a justice line, use everything from here
-                question_start = search_start + len('\n'.join(lines[:i]))
-                break
+    # Clean up whitespace
+    snippet = re.sub(r'[ \t]+', ' ', snippet)
+    snippet = re.sub(r'\n{3,}', '\n\n', snippet)
     
-    # Find the end of the question - look for the next speaker or end of question
-    # Search forward from question_pos to find where the question ends
-    after_question = transcript_text[question_pos:]
-    
-    # Look for the next speaker (counsel or another justice) to mark the end of the question
-    next_speaker_pattern = r'(?:\n\s*)((?:MR\.|MS\.|MRS\.|COUNSEL|GENERAL|CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z])'
-    next_speaker_match = re.search(next_speaker_pattern, after_question, re.IGNORECASE | re.MULTILINE)
-    
-    if next_speaker_match:
-        # Question ends before the next speaker
-        question_end_pos = question_pos + next_speaker_match.start(1)
-    else:
-        # No next speaker found - look for the last question mark in a reasonable range
-        search_end = min(len(transcript_text), question_pos + 500)
-        question_section = transcript_text[question_pos:search_end]
-        last_q_pos = question_section.rfind('?')
-        if last_q_pos != -1:
-            question_end_pos = question_pos + last_q_pos + 1
-        else:
-            question_end_pos = min(len(transcript_text), question_pos + 300)
-    
-    # Extract the full question snippet (from justice label to end of question)
-    question_full = transcript_text[question_start:question_end_pos].strip()
-    
-    # Clean up the question (remove extra whitespace but preserve structure)
-    question_full = re.sub(r'[ \t]+', ' ', question_full)
-    question_full = re.sub(r'\n{3,}', '\n\n', question_full)
-    
-    return question_full
+    return snippet
 
 
 def run_async(coro):
