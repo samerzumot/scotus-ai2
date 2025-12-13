@@ -32,8 +32,8 @@ from utils.pdf import extract_text_from_pdf_bytes
 from utils.predictor import predict_votes_and_questions, _load_corpus_cached, _build_prompt, _coerce_prediction
 from utils.schemas import BacktestResult
 from utils.semantic_matcher import analyze_question_semantic_match
-from utils.scotus import JUSTICE_NAMES
 from utils.topic_extractor import extract_key_topics, find_topic_mentions_in_transcript
+from utils.scotus import JUSTICE_NAMES
 from utils.transcript_finder import find_transcript_urls, extract_case_name_from_hint
 from utils.transcripts import fetch_transcript_text
 
