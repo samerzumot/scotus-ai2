@@ -75,36 +75,16 @@ def _extract_question_snippet(transcript_text: str, question_text: str) -> Optio
     if not transcript_text or not question_text:
         return None
     
-    # Clean the question text - remove common prefixes/suffixes that might not match exactly
-    question_clean = question_text.strip()
-    # Remove trailing punctuation that might vary
-    question_clean = re.sub(r'[?.!]+$', '', question_clean).strip()
-    
     # Find the question in the transcript (case-insensitive)
-    question_lower = question_clean.lower()
+    question_lower = question_text.lower().strip()
     transcript_lower = transcript_text.lower()
     
-    # Try to find the question text - look for a substantial match (at least 20 chars)
-    question_pos = -1
-    if len(question_lower) >= 20:
-        question_pos = transcript_lower.find(question_lower)
+    # Try to find the question text
+    question_pos = transcript_lower.find(question_lower)
     
     # If not found, try finding a shorter substring (first 50 chars)
     if question_pos == -1 and len(question_lower) > 50:
         question_pos = transcript_lower.find(question_lower[:50])
-    
-    # If still not found, try finding key words from the question
-    if question_pos == -1:
-        # Extract key words (3+ chars) and try to find them together
-        key_words = [w for w in re.findall(r'\b[a-z]{3,}\b', question_lower) if w not in ['the', 'and', 'for', 'are', 'was', 'this', 'that', 'with', 'from']]
-        if len(key_words) >= 2:
-            # Try to find a location where at least 2 key words appear close together
-            for i in range(len(transcript_lower) - 100):
-                snippet = transcript_lower[i:i+200]
-                matches = sum(1 for word in key_words[:5] if word in snippet)
-                if matches >= 2:
-                    question_pos = i
-                    break
     
     if question_pos == -1:
         return None
@@ -174,33 +154,6 @@ def _extract_question_snippet(transcript_text: str, question_text: str) -> Optio
     # Clean up the question (remove extra whitespace but preserve structure)
     question_full = re.sub(r'[ \t]+', ' ', question_full)
     question_full = re.sub(r'\n{3,}', '\n\n', question_full)
-    
-    # Remove transcript metadata/headers that might have been captured
-    # Remove lines that are just numbers or page numbers
-    lines = question_full.split('\n')
-    cleaned_lines = []
-    for line in lines:
-        line_stripped = line.strip()
-        # Skip lines that are just numbers or page numbers
-        if re.match(r'^\d+$', line_stripped):
-            continue
-        # Skip lines with "Heritage Reporting Corporation" or similar metadata
-        if 'heritage reporting' in line_stripped.lower() or ('official' in line_stripped.lower() and 'subject' in line_stripped.lower()):
-            continue
-        # Skip lines that are just number sequences
-        if re.match(r'^[\d\s]+$', line_stripped):
-            continue
-        cleaned_lines.append(line)
-    
-    question_full = '\n'.join(cleaned_lines).strip()
-    
-    # Verify that the extracted question actually contains the matched question text
-    # If not, it might be the wrong question - return None to avoid showing irrelevant content
-    if question_clean and len(question_clean) >= 10:
-        # Check if the matched text appears in the extracted question (first 1000 chars)
-        if question_clean.lower() not in question_full.lower()[:1000]:
-            # The extracted question doesn't contain the matched text - might be wrong
-            return None
     
     return question_full
 
