@@ -27,6 +27,9 @@ def find_oyez_transcript_url(case_name: str, term: Optional[int] = None) -> Opti
     """
     Generate a potential Oyez transcript URL from case name.
     Oyez URLs are typically: https://www.oyez.org/cases/{term}/{slug}
+    
+    Note: This generates estimated URLs. Oyez uses specific slugs that may not match
+    our generated slug. The URL should be verified before use.
     """
     if not case_name:
         return None
@@ -36,22 +39,27 @@ def find_oyez_transcript_url(case_name: str, term: Optional[int] = None) -> Opti
     if not normalized:
         return None
     
-    # Create slug (lowercase, replace spaces with hyphens)
-    slug = re.sub(r'\s+', '-', normalized.lower())
+    # Create slug (lowercase, replace spaces with hyphens, remove special chars)
+    # Oyez slugs are typically: case-name-v-case-name (lowercase, hyphens)
+    slug = normalized.lower()
+    # Remove common legal suffixes
+    slug = re.sub(r'\s+v\.?\s+', '-v-', slug)
+    slug = re.sub(r'\s+', '-', slug)
+    # Remove special characters but keep hyphens
     slug = re.sub(r'[^a-z0-9-]', '', slug)
     slug = re.sub(r'-+', '-', slug).strip('-')
     
-    if not slug:
+    if not slug or len(slug) < 3:
         return None
     
     # If we have a term, use it; otherwise try recent terms
     if term:
         return f"https://www.oyez.org/cases/{term}/{slug}"
     
-    # Try recent terms (2020-2024)
+    # Try recent terms (2020-2024) - return first attempt
+    # Note: Without term, this is less reliable
     for year in range(2024, 2019, -1):
         url = f"https://www.oyez.org/cases/{year}/{slug}"
-        # We'll let the fetcher verify if it exists
         return url
     
     return None
