@@ -241,15 +241,17 @@ def main():
                     return
         
         # If we have a precomputed prediction, skip ALL API calls and loading steps
-        if use_precomputed and prediction:
+        if use_precomputed and prediction is not None:
             # Skip directly to displaying results - no progress indicators, no corpus loading, no API calls
+            # Do NOT create any progress bars or status messages - go straight to results
             pass
         else:
             # Generate fresh prediction with detailed progress indicators
             # Get config
             corpus_path = os.getenv("HISTORICAL_CASES_PATH") or str(_ROOT / "data" / "historical_cases.jsonl")
             retrieval_top_k = int(os.getenv("RETRIEVAL_TOP_K") or "5")
-            # Predict with detailed progress indicators
+            
+            # Only show progress indicators for fresh predictions (not precomputed)
             progress_bar = st.progress(0)
             status_text = st.empty()
             detail_text = st.empty()
