@@ -127,72 +127,18 @@ def _extract_question_and_answer(transcript_text: str, question_text: str) -> Op
         # No question mark found, use the end of the matched question text
         question_end_pos = question_pos + len(question_text)
     
-    # Find the next speaker after the question ends
-    # Look for the next speaker label after question_end_pos
-    after_question_end = transcript_text[question_end_pos:]
+    # Extract ONLY the question (from justice label to question mark)
+    # Do not include counsel response
+    question_full = transcript_text[question_start:question_end_pos].strip()
     
-    # Pattern to find next speaker: "MR.", "MS.", "MRS.", "COUNSEL", or next "JUSTICE"
-    next_speaker_pattern = r'(?:\n\s*)((?:MR\.|MS\.|MRS\.|COUNSEL|CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z])'
-    next_speaker_match = re.search(next_speaker_pattern, after_question_end, re.IGNORECASE | re.MULTILINE)
+    # Clean up the question (remove extra whitespace but preserve structure)
+    question_full = re.sub(r'[ \t]+', ' ', question_full)
+    question_full = re.sub(r'\n{3,}', '\n\n', question_full)
     
-    if next_speaker_match:
-        # Check if it's counsel (answer) or another justice (next question)
-        speaker_label = next_speaker_match.group(1).upper()
-        is_counsel = any(c in speaker_label for c in ['MR.', 'MS.', 'MRS.', 'COUNSEL'])
-        
-        if is_counsel:
-            # This is the answer - extract it
-            answer_start = question_end_pos + next_speaker_match.start(1)
-            # Find where the answer ends (next speaker)
-            answer_text_after = transcript_text[answer_start:]
-            answer_end_match = re.search(
-                r'(?:\n\s*)((?:MR\.|MS\.|MRS\.|COUNSEL|CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z])',
-                answer_text_after[len(next_speaker_match.group(0)):],
-                re.IGNORECASE | re.MULTILINE
-            )
-            
-            if answer_end_match:
-                answer_end = answer_start + len(next_speaker_match.group(0)) + answer_end_match.start(1)
-            else:
-                # Answer goes to end or reasonable limit (2000 chars max)
-                answer_end = min(len(transcript_text), answer_start + 2000)
-            
-            # Extract ONLY the question (from justice label to question end) and answer (from counsel to next speaker)
-            question_full = transcript_text[question_start:question_end_pos].strip()
-            answer_full = transcript_text[answer_start:answer_end].strip()
-            
-            # Clean up the question (remove extra whitespace but preserve structure)
-            question_full = re.sub(r'[ \t]+', ' ', question_full)
-            question_full = re.sub(r'\n{3,}', '\n\n', question_full)
-            
-            # Clean up the answer
-            answer_full = re.sub(r'[ \t]+', ' ', answer_full)
-            answer_full = re.sub(r'\n{3,}', '\n\n', answer_full)
-            
-            return {
-                "question": question_full,
-                "answer": answer_full
-            }
-        else:
-            # Next speaker is another justice, so no answer found
-            # Extract ONLY the question (no extra context)
-            question_full = transcript_text[question_start:question_end_pos].strip()
-            question_full = re.sub(r'[ \t]+', ' ', question_full)
-            question_full = re.sub(r'\n{3,}', '\n\n', question_full)
-            return {
-                "question": question_full,
-                "answer": ""
-            }
-    else:
-        # No next speaker found - question might be at end of transcript
-        # Extract ONLY the question (no extra context)
-        question_full = transcript_text[question_start:question_end_pos].strip()
-        question_full = re.sub(r'[ \t]+', ' ', question_full)
-        question_full = re.sub(r'\n{3,}', '\n\n', question_full)
-        return {
-            "question": question_full,
-            "answer": ""
-        }
+    return {
+        "question": question_full,
+        "answer": ""  # Never show counsel response
+    }
 
 
 def run_async(coro):
