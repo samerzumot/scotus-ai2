@@ -75,16 +75,36 @@ def _extract_question_snippet(transcript_text: str, question_text: str) -> Optio
     if not transcript_text or not question_text:
         return None
     
+    # Clean the question text - remove common prefixes/suffixes that might not match exactly
+    question_clean = question_text.strip()
+    # Remove trailing punctuation that might vary
+    question_clean = re.sub(r'[?.!]+$', '', question_clean).strip()
+    
     # Find the question in the transcript (case-insensitive)
-    question_lower = question_text.lower().strip()
+    question_lower = question_clean.lower()
     transcript_lower = transcript_text.lower()
     
-    # Try to find the question text
-    question_pos = transcript_lower.find(question_lower)
+    # Try to find the question text - look for a substantial match (at least 20 chars)
+    question_pos = -1
+    if len(question_lower) >= 20:
+        question_pos = transcript_lower.find(question_lower)
     
     # If not found, try finding a shorter substring (first 50 chars)
     if question_pos == -1 and len(question_lower) > 50:
         question_pos = transcript_lower.find(question_lower[:50])
+    
+    # If still not found, try finding key words from the question
+    if question_pos == -1:
+        # Extract key words (3+ chars) and try to find them together
+        key_words = [w for w in re.findall(r'\b[a-z]{3,}\b', question_lower) if w not in ['the', 'and', 'for', 'are', 'was', 'this', 'that', 'with', 'from']]
+        if len(key_words) >= 2:
+            # Try to find a location where at least 2 key words appear close together
+            for i in range(len(transcript_lower) - 100):
+                snippet = transcript_lower[i:i+200]
+                matches = sum(1 for word in key_words[:5] if word in snippet)
+                if matches >= 2:
+                    question_pos = i
+                    break
     
     if question_pos == -1:
         return None
