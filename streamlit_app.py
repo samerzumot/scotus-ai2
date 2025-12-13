@@ -200,6 +200,9 @@ def main():
             return
         
         # Get brief text and metadata
+        use_precomputed = False
+        prediction = None
+        
         if use_sample and selected_sample:
             brief_text = selected_sample.get("brief_text", "")
             uploader_side = selected_sample.get("uploader_side", "UNKNOWN")
@@ -213,15 +216,14 @@ def main():
             
             st.info(f"📄 Using sample brief: **{selected_sample['case_name']}**")
             
-            # Use precomputed prediction if available (instant results)
+            # Use precomputed prediction if available (instant results - skip all loading steps)
             if precomputed_prediction:
-                st.success("⚡ Using precomputed predictions (instant results)")
+                st.success("⚡ Using precomputed predictions (instant results, no API calls)")
                 from utils.schemas import VoteQuestionPrediction
                 try:
                     prediction = VoteQuestionPrediction.model_validate(precomputed_prediction)
-                    # Skip to displaying results - no API calls needed
-                    # Set a flag to skip the prediction step
                     use_precomputed = True
+                    # Skip directly to displaying results - no progress bars, no API calls
                 except Exception as e:
                     st.warning(f"⚠️ Could not load precomputed prediction: {e}. Generating fresh prediction...")
                     use_precomputed = False
@@ -230,7 +232,6 @@ def main():
                 use_precomputed = False
         else:
             # Read PDF from uploaded file
-            use_precomputed = False
             with st.spinner("Reading PDF..."):
                 pdf_bytes = uploaded_file.read()
                 brief_text = extract_text_from_pdf_bytes(pdf_bytes, max_chars=220_000)
@@ -239,12 +240,15 @@ def main():
                     st.error("Could not extract text from PDF")
                     return
         
-        # Get config
-        corpus_path = os.getenv("HISTORICAL_CASES_PATH") or str(_ROOT / "data" / "historical_cases.jsonl")
-        retrieval_top_k = int(os.getenv("RETRIEVAL_TOP_K") or "5")
-        
-        # If we have a precomputed prediction, skip API calls
-        if not use_precomputed:
+        # If we have a precomputed prediction, skip ALL API calls and loading steps
+        if use_precomputed and prediction:
+            # Skip directly to displaying results - no progress indicators, no corpus loading, no API calls
+            pass
+        else:
+            # Generate fresh prediction with detailed progress indicators
+            # Get config
+            corpus_path = os.getenv("HISTORICAL_CASES_PATH") or str(_ROOT / "data" / "historical_cases.jsonl")
+            retrieval_top_k = int(os.getenv("RETRIEVAL_TOP_K") or "5")
             # Predict with detailed progress indicators
             progress_bar = st.progress(0)
             status_text = st.empty()
