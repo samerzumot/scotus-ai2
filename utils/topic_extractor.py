@@ -98,11 +98,15 @@ def extract_key_topics(question: str) -> List[str]:
     significant_words = [w for w in words if w not in common_words and len(w) > 4]
     topics.update(set(significant_words[:5]))  # Limit to top 5
     
-    # Clean and normalize
+    # Clean and normalize (deduplicate case-insensitively)
     cleaned = []
+    seen_lower = set()
     for topic in topics:
         topic = topic.strip()
-        if len(topic) > 2 and topic not in cleaned:
+        topic_lower = topic.lower()
+        if len(topic) > 2 and topic_lower not in seen_lower:
+            seen_lower.add(topic_lower)
+            # Prefer capitalized version if available
             cleaned.append(topic)
     
     # Sort by length (longer phrases are usually more specific)
