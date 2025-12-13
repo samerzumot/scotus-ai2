@@ -115,6 +115,68 @@ def extract_key_topics(question: str) -> List[str]:
     return cleaned[:10]  # Return top 10 most significant topics
 
 
+def _extract_justice_questions_only(transcript_text: str) -> str:
+    """
+    Extract only justice questions from the transcript, excluding counsel responses.
+    
+    Justice questions typically:
+    - Start with "JUSTICE [NAME]:" or "CHIEF JUSTICE [NAME]:"
+    - End with "?" or when next speaker starts
+    - May span multiple lines
+    
+    Counsel responses typically:
+    - Start with "MR. [NAME]:", "MS. [NAME]:", "MRS. [NAME]:", or "COUNSEL:"
+    """
+    if not transcript_text:
+        return ""
+    
+    # Pattern to match justice questions
+    # Matches: "JUSTICE [NAME]:" or "CHIEF JUSTICE [NAME]:" followed by text until next speaker or end
+    justice_pattern = r'(?:^|\n)\s*(?:CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z][A-Z\s]+\s*:.*?(?=\n\s*(?:CHIEF\s+JUSTICE|JUSTICE|MR\.|MS\.|MRS\.|COUNSEL)\s+[A-Z]|$)'
+    
+    # Find all justice question segments
+    justice_questions = []
+    for match in re.finditer(justice_pattern, transcript_text, re.IGNORECASE | re.MULTILINE | re.DOTALL):
+        question_text = match.group(0).strip()
+        # Only keep if it contains a question mark (actual question)
+        if '?' in question_text:
+            # Clean up the question text
+            # Remove the speaker label
+            question_text = re.sub(r'^(?:CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z][A-Z\s]+\s*:\s*', '', question_text, flags=re.IGNORECASE)
+            # Remove trailing speaker labels that might have been captured
+            question_text = re.sub(r'\s*(?:CHIEF\s+JUSTICE|JUSTICE|MR\.|MS\.|MRS\.|COUNSEL)\s+[A-Z].*$', '', question_text, flags=re.IGNORECASE)
+            question_text = question_text.strip()
+            if len(question_text) > 10:  # Only keep substantial questions
+                justice_questions.append(question_text)
+    
+    if not justice_questions:
+        # Fallback: try simpler pattern - lines that start with JUSTICE and contain "?"
+        lines = transcript_text.split('\n')
+        for i, line in enumerate(lines):
+            if re.match(r'^\s*(?:CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z]', line, re.IGNORECASE):
+                # Collect lines until we hit next speaker or end
+                question_lines = [line]
+                for j in range(i + 1, min(i + 10, len(lines))):  # Look ahead up to 10 lines
+                    next_line = lines[j]
+                    # Stop if we hit another speaker
+                    if re.match(r'^\s*(?:CHIEF\s+JUSTICE|JUSTICE|MR\.|MS\.|MRS\.|COUNSEL)\s+[A-Z]', next_line, re.IGNORECASE):
+                        break
+                    question_lines.append(next_line)
+                    # Stop if we found a question mark
+                    if '?' in next_line:
+                        break
+                
+                question_text = ' '.join(question_lines)
+                if '?' in question_text and len(question_text) > 20:
+                    # Remove speaker label
+                    question_text = re.sub(r'^(?:CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z][A-Z\s]+\s*:\s*', '', question_text, flags=re.IGNORECASE)
+                    question_text = question_text.strip()
+                    if question_text not in justice_questions:
+                        justice_questions.append(question_text)
+    
+    return '\n\n'.join(justice_questions)
+
+
 def _extract_oral_arguments_content(transcript_text: str) -> str:
     """
     Extract only the oral arguments content, removing headers, footers, and metadata.
@@ -185,7 +247,7 @@ def _extract_oral_arguments_content(transcript_text: str) -> str:
 def find_topic_mentions_in_transcript(transcript_text: str, topics: List[str], context_chars: int = 200) -> List[dict]:
     """
     Find mentions of key topics in the transcript and return context snippets.
-    Only searches within the oral arguments content, excluding headers/footers.
+    Only searches within justice questions, excluding counsel responses and headers/footers.
     
     Returns a list of dicts with:
     - topic: the topic that was found
@@ -195,11 +257,18 @@ def find_topic_mentions_in_transcript(transcript_text: str, topics: List[str], c
     if not transcript_text or not topics:
         return []
     
-    # Extract only oral arguments content, excluding headers/footers
-    oral_args_text = _extract_oral_arguments_content(transcript_text)
-    if not oral_args_text:
-        # Fallback to full text if extraction fails
-        oral_args_text = transcript_text
+    # Extract only justice questions, excluding counsel responses
+    justice_questions_text = _extract_justice_questions_only(transcript_text)
+    if not justice_questions_text:
+        # Fallback: try oral arguments content (but still prefer justice questions)
+        oral_args_text = _extract_oral_arguments_content(transcript_text)
+        if not oral_args_text:
+            # Final fallback to full text
+            oral_args_text = transcript_text
+        else:
+            oral_args_text = oral_args_text
+    else:
+        oral_args_text = justice_questions_text
     
     transcript_lower = oral_args_text.lower()
     mentions = []
