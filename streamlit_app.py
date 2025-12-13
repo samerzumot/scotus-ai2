@@ -414,7 +414,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         
         # Display results
         if use_precomputed:
-            st.success("✅ Analysis complete! (Precomputed results)")
+            st.success("✅ **Instant results** - Precomputed predictions loaded (no API calls)")
         else:
             st.success("✅ Analysis complete!")
         

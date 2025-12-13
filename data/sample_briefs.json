@@ -9,8 +9,200 @@
       "transcript_url": "https://www.oyez.org/cases/2024/williams-v-reeds",
       "case_hint": "Williams v. Reeds (2024)",
       "docket": "23-1234",
-      "tags": ["first amendment", "free speech", "constitutional law"],
-      "summary": "First Amendment challenge to content-based speech restrictions. Questions about strict scrutiny, narrow tailoring, and chilling effects on protected speech."
+      "tags": [
+        "first amendment",
+        "free speech",
+        "constitutional law"
+      ],
+      "summary": "First Amendment challenge to content-based speech restrictions. Questions about strict scrutiny, narrow tailoring, and chilling effects on protected speech.",
+      "precomputed_prediction": {
+        "uploader_side": "PETITIONER",
+        "overall": {
+          "predicted_winner": "RESPONDENT",
+          "confidence": 0.85,
+          "why": "The Court's current majority has consistently favored free speech rights over government regulations that compel or chill speech, as seen in cases like 303 Creative and Janus.",
+          "swing_justice": "roberts"
+        },
+        "votes": [
+          {
+            "justice_id": "roberts",
+            "justice_name": "Roberts, C.J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.8,
+            "rationale": "Chief Justice Roberts will likely find the disclosure requirement is a content-based restriction that is not narrowly tailored, but may write a narrow opinion to avoid setting an overly broad precedent against all disclosure laws."
+          },
+          {
+            "justice_id": "thomas",
+            "justice_name": "Thomas, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.95,
+            "rationale": "Justice Thomas has a very broad view of First Amendment protections and is deeply skeptical of compelled speech or disclosure regimes, which he often views as unconstitutional burdens on anonymous speech."
+          },
+          {
+            "justice_id": "alito",
+            "justice_name": "Alito, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.9,
+            "rationale": "Justice Alito is a staunch defender of free speech, particularly when government regulation could lead to a chilling effect on controversial or unpopular viewpoints. He will likely see this statute as a tool for harassment."
+          },
+          {
+            "justice_id": "sotomayor",
+            "justice_name": "Sotomayor, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.85,
+            "rationale": "Justice Sotomayor is often more willing to balance speech rights against compelling government interests like transparency or anti-discrimination, and will likely find the disclosure requirement serves a valid public purpose."
+          },
+          {
+            "justice_id": "kagan",
+            "justice_name": "Kagan, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.75,
+            "rationale": "Justice Kagan will likely focus on precedent allowing for disclosure in other contexts (e.g., campaign finance) and may argue that this regulation is a reasonable, content-neutral means of achieving a legitimate government objective."
+          },
+          {
+            "justice_id": "gorsuch",
+            "justice_name": "Gorsuch, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.95,
+            "rationale": "As the author of 303 Creative, Justice Gorsuch is highly protective of speech rights against government compulsion and will almost certainly view this as an impermissible content-based law that fails strict scrutiny."
+          },
+          {
+            "justice_id": "kavanaugh",
+            "justice_name": "Kavanaugh, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.9,
+            "rationale": "Justice Kavanaugh has a consistent record of voting to protect free speech against government encroachment and is likely to agree with the petitioner that the statute is a content-based restriction that chills protected expression."
+          },
+          {
+            "justice_id": "barrett",
+            "justice_name": "Barrett, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.9,
+            "rationale": "Justice Barrett's jurisprudence suggests a strong inclination to apply strict scrutiny to content-based regulations, and she is unlikely to be persuaded that this statute is narrowly tailored to a compelling government interest."
+          },
+          {
+            "justice_id": "jackson",
+            "justice_name": "Jackson, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.8,
+            "rationale": "Justice Jackson is likely to credit the government's stated interest behind the disclosure law and may argue that the burden on speech is incidental and justified by the need for transparency and public information."
+          }
+        ],
+        "questions": [
+          {
+            "justice_id": "roberts",
+            "justice_name": "Roberts, C.J.",
+            "question": "Counsel, what is the limiting principle to your argument? If we rule for you, are there any disclosure requirements related to campaign finance, lobbying, or securities that would remain constitutional?",
+            "what_it_tests": "The breadth of the proposed rule and its potential to unsettle established precedent in other areas of law."
+          },
+          {
+            "justice_id": "thomas",
+            "justice_name": "Thomas, J.",
+            "question": "Where is the historical evidence from the Founding era that the government possessed the power to compel this sort of disclosure from a private citizen engaged in ordinary speech?",
+            "what_it_tests": "The originalist justification for the government's power to enact such a statute."
+          },
+          {
+            "justice_id": "alito",
+            "justice_name": "Alito, J.",
+            "question": "Let's consider the practical reality. Isn't the primary effect of a law like this to create a list of disfavored speakers for opponents to harass and intimidate? How is that not a substantial chilling effect on speech?",
+            "what_it_tests": "The real-world consequences of the law and the severity of its chilling effect on protected expression."
+          },
+          {
+            "justice_id": "sotomayor",
+            "justice_name": "Sotomayor, J.",
+            "question": "What about the public's right to know who is speaking? If the government has a compelling interest in preventing fraud or informing the public, why isn't a simple disclosure requirement a reasonable way to achieve that?",
+            "what_it_tests": "The weight of the government's asserted interest and whether the speaker's rights automatically override the public good."
+          },
+          {
+            "justice_id": "kagan",
+            "justice_name": "Kagan, J.",
+            "question": "We have upheld disclosure requirements in other contexts, like in Buckley v. Valeo. How do you distinguish this case? Why is the burden on speech here different in kind, and not just in degree, from those we have previously permitted?",
+            "what_it_tests": "The advocate's ability to draw a principled line between this case and established precedents that allow for compelled disclosure."
+          },
+          {
+            "justice_id": "gorsuch",
+            "justice_name": "Gorsuch, J.",
+            "question": "This law appears to apply to a speaker only when they speak about a certain topic. How is that not a classic content-based restriction under Reed v. Town of Gilbert, which would trigger strict scrutiny?",
+            "what_it_tests": "The proper application of the Court's bright-line rule for identifying content-based speech restrictions."
+          },
+          {
+            "justice_id": "kavanaugh",
+            "justice_name": "Kavanaugh, J.",
+            "question": "Assuming for the sake of argument that the government's interest is compelling, what evidence is there that this specific disclosure mandate is the least restrictive means of achieving that interest?",
+            "what_it_tests": "The government's justification for its chosen method and whether it adequately considered less speech-restrictive alternatives."
+          },
+          {
+            "justice_id": "barrett",
+            "justice_name": "Barrett, J.",
+            "question": "How should a court determine when a disclosure requirement becomes 'unduly burdensome'? Are we to look at the financial cost, the risk of reprisal, or something else? And what level of deference do we owe the legislature's judgment on that question?",
+            "what_it_tests": "The legal standard for evaluating the burden on speech and the proper role of the judiciary versus the legislature."
+          },
+          {
+            "justice_id": "jackson",
+            "justice_name": "Jackson, J.",
+            "question": "Does the level of First Amendment protection here depend on the context of the speech? For example, would the analysis be different if this were commercial speech versus political speech, and who gets to make that determination?",
+            "what_it_tests": "Whether a categorical approach is appropriate or if the specific context and nature of the speech should alter the constitutional analysis."
+          }
+        ],
+        "retrieved_cases": [
+          {
+            "case_id": "scotus-masterpiece-cakeshop-v-colorado-civil-rights-commission",
+            "case_name": "Masterpiece Cakeshop v. Colorado Civil Rights Commission",
+            "term": 2018,
+            "tags": [
+              "first amendment",
+              "free exercise"
+            ],
+            "outcome": "REVERSED"
+          },
+          {
+            "case_id": "scotus-counterman-v-colorado",
+            "case_name": "Counterman v. Colorado",
+            "term": 2023,
+            "tags": [
+              "first amendment",
+              "true threats"
+            ],
+            "outcome": "REVERSED"
+          },
+          {
+            "case_id": "known-303-creative-llc-v.-elenis",
+            "case_name": "303 Creative LLC v. Elenis",
+            "term": 2023,
+            "tags": [
+              "first amendment",
+              "constitutional law"
+            ],
+            "outcome": "AFFIRMED"
+          },
+          {
+            "case_id": "scotus-janus-v-afscme",
+            "case_name": "Janus v. AFSCME",
+            "term": 2018,
+            "tags": [
+              "first amendment",
+              "public sector unions"
+            ],
+            "outcome": "REVERSED"
+          },
+          {
+            "case_id": "scotus-arizona-state-legislature-v-arizona-independent-redistrictin",
+            "case_name": "Arizona State Legislature v. Arizona Independent Redistricting Commission",
+            "term": 2015,
+            "tags": [
+              "elections clause",
+              "redistricting"
+            ],
+            "outcome": "AFFIRMED"
+          }
+        ],
+        "model": {
+          "provider": "google",
+          "predict_model": "models/gemini-2.5-pro",
+          "embed_model": "models/text-embedding-004",
+          "retrieval_top_k": 5
+        }
+      }
     },
     {
       "id": "smith-v-state-agency",
@@ -21,8 +213,200 @@
       "transcript_url": "https://www.oyez.org/cases/2024/smith-v-state-agency",
       "case_hint": "Smith v. State Agency (2024)",
       "docket": "23-5678",
-      "tags": ["administrative law", "public health", "regulatory authority"],
-      "summary": "Administrative law case involving government regulation. Issues of content neutrality, government interests, and alternative channels of communication."
+      "tags": [
+        "administrative law",
+        "public health",
+        "regulatory authority"
+      ],
+      "summary": "Administrative law case involving government regulation. Issues of content neutrality, government interests, and alternative channels of communication.",
+      "precomputed_prediction": {
+        "uploader_side": "RESPONDENT",
+        "overall": {
+          "predicted_winner": "PETITIONER",
+          "confidence": 0.85,
+          "why": "The Court's conservative majority is highly skeptical of government regulations on speech, especially those that require content evaluation. They will likely view this as content-based discrimination, not a valid time, place, or manner restriction.",
+          "swing_justice": "roberts"
+        },
+        "votes": [
+          {
+            "justice_id": "roberts",
+            "justice_name": "Roberts, C.J.",
+            "vote": "PETITIONER",
+            "confidence": 0.8,
+            "rationale": "Will be concerned about the government acting as a ministry of truth and will likely seek a narrow ruling focusing on the regulation not being narrowly tailored."
+          },
+          {
+            "justice_id": "thomas",
+            "justice_name": "Thomas, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.95,
+            "rationale": "Views the First Amendment as providing nearly absolute protection against content-based speech regulations and will see this as a clear violation."
+          },
+          {
+            "justice_id": "alito",
+            "justice_name": "Alito, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.95,
+            "rationale": "Is a staunch defender of free speech against government encroachment and will likely view the regulation's public health justification with deep skepticism."
+          },
+          {
+            "justice_id": "sotomayor",
+            "justice_name": "Sotomayor, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.8,
+            "rationale": "Likely to be deferential to the government's stated interest in protecting public health and safety, and may view the regulation as a reasonable measure to combat harmful misinformation."
+          },
+          {
+            "justice_id": "kagan",
+            "justice_name": "Kagan, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.6,
+            "rationale": "While a strong defender of the First Amendment, she may be persuaded by the government's argument if the regulation is presented as a neutral tool to prevent concrete public harm, though she will heavily scrutinize the content-neutrality claim."
+          },
+          {
+            "justice_id": "gorsuch",
+            "justice_name": "Gorsuch, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.95,
+            "rationale": "Will view this through the dual lenses of free speech and administrative overreach (Major Questions Doctrine), finding the agency lacks clear authority to regulate speech in this manner."
+          },
+          {
+            "justice_id": "kavanaugh",
+            "justice_name": "Kavanaugh, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.9,
+            "rationale": "Has a consistent record of siding with speakers against government speech regulations and will likely find this is not the least restrictive means to achieve the state's goal."
+          },
+          {
+            "justice_id": "barrett",
+            "justice_name": "Barrett, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.9,
+            "rationale": "Her textualist/originalist approach will lead her to find little historical or textual support for a government agency policing the accuracy of public discourse."
+          },
+          {
+            "justice_id": "jackson",
+            "justice_name": "Jackson, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.75,
+            "rationale": "Likely to focus on the practical necessity for the government to act in the interest of public health and may find the regulatory scheme to be a permissible way to protect vulnerable populations from dangerous falsehoods."
+          }
+        ],
+        "questions": [
+          {
+            "justice_id": "roberts",
+            "justice_name": "Roberts, C.J.",
+            "question": "Counsel, if we agree the government has an interest in ensuring 'accurate information,' what is the limiting principle? Could the government prohibit editorials that it deems to have 'inaccurate' economic forecasts during a recession?",
+            "what_it_tests": "The scope and potential for abuse of the government's claimed power to regulate information."
+          },
+          {
+            "justice_id": "thomas",
+            "justice_name": "Thomas, J.",
+            "question": "Where is the historical precedent for this kind of regulation? At the time of the founding, was there any understanding that the government could punish speech simply for being contrary to the official public health consensus of the day?",
+            "what_it_tests": "The originalist basis for the government's asserted power."
+          },
+          {
+            "justice_id": "alito",
+            "justice_name": "Alito, J.",
+            "question": "So if a Nobel Prize-winning scientist develops a new theory that contradicts your agency's current guidance, you could silence him for spreading 'inaccurate information'? How does your rule not just entrench orthodoxy and stifle scientific debate?",
+            "what_it_tests": "The regulation's chilling effect on dissent and legitimate scientific inquiry."
+          },
+          {
+            "justice_id": "sotomayor",
+            "justice_name": "Sotomayor, J.",
+            "question": "We're not talking about abstract ideas here, are we? We're talking about misinformation that can lead to death and serious illness. Why shouldn't the government's interest in preventing that harm be considered compelling?",
+            "what_it_tests": "The weight and gravity of the government's asserted public health interest."
+          },
+          {
+            "justice_id": "kagan",
+            "justice_name": "Kagan, J.",
+            "question": "You claim this is content-neutral, but to enforce it, an official has to read the speech and decide if it's 'inaccurate.' How is that not the very definition of a content-based regulation under our decision in Reed v. Town of Gilbert?",
+            "what_it_tests": "The fundamental weakness in the Respondent's legal framework for defending the regulation."
+          },
+          {
+            "justice_id": "gorsuch",
+            "justice_name": "Gorsuch, J.",
+            "question": "Which specific words in the statute give your agency the authority to act as a national truth commission for public health? And what due process does a person receive before you label their speech 'inaccurate' and restrict it?",
+            "what_it_tests": "The agency's statutory authority and the procedural safeguards for speakers."
+          },
+          {
+            "justice_id": "kavanaugh",
+            "justice_name": "Kavanaugh, J.",
+            "question": "The traditional answer to bad speech is more speech. Why isn't a robust public information campaign by the government a sufficient and less restrictive alternative to outright censoring citizens?",
+            "what_it_tests": "Whether the regulation is narrowly tailored and satisfies the 'least restrictive means' test."
+          },
+          {
+            "justice_id": "barrett",
+            "justice_name": "Barrett, J.",
+            "question": "The standard in your regulation is 'accuracy.' But scientific consensus can change. How is an ordinary citizen supposed to know, on any given day, whether their speech is legal or illegal when the standard is so fluid and controlled by the government itself?",
+            "what_it_tests": "The potential for the regulation to be unconstitutionally vague and arbitrarily enforced."
+          },
+          {
+            "justice_id": "jackson",
+            "justice_name": "Jackson, J.",
+            "question": "If we rule for the petitioner, what are the real-world consequences for communities that are disproportionately targeted by harmful disinformation campaigns? Does the First Amendment require us to leave the government powerless to protect them?",
+            "what_it_tests": "The practical impact of striking down the regulation on public safety and vulnerable populations."
+          }
+        ],
+        "retrieved_cases": [
+          {
+            "case_id": "scotus-masterpiece-cakeshop-v-colorado-civil-rights-commission",
+            "case_name": "Masterpiece Cakeshop v. Colorado Civil Rights Commission",
+            "term": 2018,
+            "tags": [
+              "first amendment",
+              "free exercise"
+            ],
+            "outcome": "REVERSED"
+          },
+          {
+            "case_id": "known-west-virginia-v.-epa",
+            "case_name": "West Virginia v. EPA",
+            "term": 2022,
+            "tags": [
+              "administrative law",
+              "statutory interpretation"
+            ],
+            "outcome": "REVERSED"
+          },
+          {
+            "case_id": "scotus-kisor-v-wilkie",
+            "case_name": "Kisor v. Wilkie",
+            "term": 2019,
+            "tags": [
+              "administrative law",
+              "auer deference"
+            ],
+            "outcome": "AFFIRMED"
+          },
+          {
+            "case_id": "known-303-creative-llc-v.-elenis",
+            "case_name": "303 Creative LLC v. Elenis",
+            "term": 2023,
+            "tags": [
+              "first amendment",
+              "constitutional law"
+            ],
+            "outcome": "AFFIRMED"
+          },
+          {
+            "case_id": "scotus-counterman-v-colorado",
+            "case_name": "Counterman v. Colorado",
+            "term": 2023,
+            "tags": [
+              "first amendment",
+              "true threats"
+            ],
+            "outcome": "REVERSED"
+          }
+        ],
+        "model": {
+          "provider": "google",
+          "predict_model": "models/gemini-2.5-pro",
+          "embed_model": "models/text-embedding-004",
+          "retrieval_top_k": 5
+        }
+      }
     },
     {
       "id": "jones-v-federal-bureau",
@@ -33,8 +417,200 @@
       "transcript_url": "https://www.oyez.org/cases/2024/jones-v-federal-bureau",
       "case_hint": "Jones v. Federal Bureau (2024)",
       "docket": "23-9012",
-      "tags": ["administrative law", "chevron deference", "statutory interpretation"],
-      "summary": "Administrative law case challenging agency authority. Issues of Chevron deference, statutory interpretation, and APA compliance following Loper Bright."
+      "tags": [
+        "administrative law",
+        "chevron deference",
+        "statutory interpretation"
+      ],
+      "summary": "Administrative law case challenging agency authority. Issues of Chevron deference, statutory interpretation, and APA compliance following Loper Bright.",
+      "precomputed_prediction": {
+        "uploader_side": "PETITIONER",
+        "overall": {
+          "predicted_winner": "PETITIONER",
+          "confidence": 0.9,
+          "why": "The Court's recent jurisprudence, particularly overturning Chevron in Loper Bright, strongly favors limiting agency authority and conducting de novo statutory review.",
+          "swing_justice": "kavanaugh"
+        },
+        "votes": [
+          {
+            "justice_id": "roberts",
+            "justice_name": "Roberts, C.J.",
+            "vote": "PETITIONER",
+            "confidence": 0.95,
+            "rationale": "Favors reasserting judicial authority over statutory interpretation and is skeptical of broad agency power, especially on major questions."
+          },
+          {
+            "justice_id": "thomas",
+            "justice_name": "Thomas, J.",
+            "vote": "PETITIONER",
+            "confidence": 1.0,
+            "rationale": "A long-standing and fervent opponent of the administrative state and judicial deference to agencies."
+          },
+          {
+            "justice_id": "alito",
+            "justice_name": "Alito, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.95,
+            "rationale": "Consistently votes to limit federal agency power and is a reliable member of the conservative wing on administrative law issues."
+          },
+          {
+            "justice_id": "sotomayor",
+            "justice_name": "Sotomayor, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.9,
+            "rationale": "Generally defers to agency expertise and is concerned that judicial second-guessing will undermine effective governance."
+          },
+          {
+            "justice_id": "kagan",
+            "justice_name": "Kagan, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.95,
+            "rationale": "A strong defender of the administrative state's functional role and agency expertise, likely to argue for a practical interpretation that allows agencies to operate."
+          },
+          {
+            "justice_id": "gorsuch",
+            "justice_name": "Gorsuch, J.",
+            "vote": "PETITIONER",
+            "confidence": 1.0,
+            "rationale": "Views judicial deference as an unconstitutional abdication of the judicial power and was a key intellectual force in overturning Chevron."
+          },
+          {
+            "justice_id": "kavanaugh",
+            "justice_name": "Kavanaugh, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.9,
+            "rationale": "Focuses on textualism and the major questions doctrine to limit agency assertions of power not clearly authorized by Congress."
+          },
+          {
+            "justice_id": "barrett",
+            "justice_name": "Barrett, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.95,
+            "rationale": "Her textualist approach is inherently skeptical of agency interpretations that stray from the most natural reading of the statute."
+          },
+          {
+            "justice_id": "jackson",
+            "justice_name": "Jackson, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.9,
+            "rationale": "Likely to focus on the procedural history and the agency's reasoned explanation, affording deference to its process and expertise."
+          }
+        ],
+        "questions": [
+          {
+            "justice_id": "roberts",
+            "justice_name": "Roberts, C.J.",
+            "question": "Counsel, even if we accept the agency's interpretation as plausible, isn't the real issue whether Congress could have intended to delegate a decision of this economic and political significance without a much clearer statement? Where is the clear authorization for this major rule?",
+            "what_it_tests": "The applicability of the Major Questions Doctrine and the constitutional separation of powers concerns underlying it."
+          },
+          {
+            "justice_id": "thomas",
+            "justice_name": "Thomas, J.",
+            "question": "Putting aside the now-defunct Chevron framework, what is the original public meaning of the statutory term at issue here? And isn't it the Judiciary's role, and its role alone, to determine that meaning?",
+            "what_it_tests": "The advocate's commitment to a purely textualist/originalist interpretation and reinforces his view on the non-delegation doctrine."
+          },
+          {
+            "justice_id": "alito",
+            "justice_name": "Alito, J.",
+            "question": "Let's assume for the sake of argument that the agency's action survives a textual analysis. What about the procedural defects? Isn't the failure to consider key aspects of the problem a classic arbitrary and capricious violation, regardless of how we interpret the statute?",
+            "what_it_tests": "The availability of a narrower, procedural off-ramp (arbitrary and capricious review) to decide the case without a broad statutory ruling."
+          },
+          {
+            "justice_id": "sotomayor",
+            "justice_name": "Sotomayor, J.",
+            "question": "Congress charged this agency with regulating a complex and evolving field. If we substitute our own judgment for the agency's on this technical matter, what are the practical consequences? Are we not crippling the government's ability to respond to new challenges as Congress intended?",
+            "what_it_tests": "The real-world impact of the petitioner's position and the value of agency expertise for effective governance."
+          },
+          {
+            "justice_id": "kagan",
+            "justice_name": "Kagan, J.",
+            "question": "The statute uses broad, ambiguous language. Isn't that precisely the kind of situation where Congress expects an expert agency, not generalist judges, to fill in the details? Why shouldn't we read this ambiguity as an implicit delegation of interpretive authority, even after Loper Bright?",
+            "what_it_tests": "The government's best argument for why some level of respect for agency interpretation is still necessary and intended by Congress."
+          },
+          {
+            "justice_id": "gorsuch",
+            "justice_name": "Gorsuch, J.",
+            "question": "Your brief alleges violations of the APA's notice-and-comment requirements. If we were to find the rulemaking process was procedurally defective, would there be any need for us to reach the larger question of the agency's statutory authority?",
+            "what_it_tests": "His preference for deciding cases on the narrowest possible grounds, particularly procedural ones that check agency power without making broad substantive law."
+          },
+          {
+            "justice_id": "kavanaugh",
+            "justice_name": "Kavanaugh, J.",
+            "question": "What is the limiting principle to your argument? If we rule for you here, does that mean every significant agency interpretation will be subject to de novo judicial review, creating massive instability for regulated parties who rely on clear rules?",
+            "what_it_tests": "The potential for regulatory chaos and the need for a predictable, workable standard for lower courts and agencies going forward."
+          },
+          {
+            "justice_id": "barrett",
+            "justice_name": "Barrett, J.",
+            "question": "Focusing on the statutory text, which specific words or phrases are most critical to your reading, and how does the surrounding statutory context confirm that your interpretation is the best one, not just a plausible one?",
+            "what_it_tests": "The rigor of the petitioner's textualist argument and their ability to ground their claims in specific language and structure, not just broad principles."
+          },
+          {
+            "justice_id": "jackson",
+            "justice_name": "Jackson, J.",
+            "question": "The agency provided a substantial record and a detailed explanation for its decision. Is it the role of this Court to re-weigh the evidence the agency considered? If the agency's process was sound and its conclusion is reasonable, on what basis can we say its action was 'arbitrary and capricious'?",
+            "what_it_tests": "The proper standard of review for the factual and policy underpinnings of an agency's decision, emphasizing deference to the agency's reasoning process."
+          }
+        ],
+        "retrieved_cases": [
+          {
+            "case_id": "known-loper-bright-enterprises-v.-raimondo",
+            "case_name": "Loper Bright Enterprises v. Raimondo",
+            "term": 2024,
+            "tags": [
+              "administrative law",
+              "statutory interpretation"
+            ],
+            "outcome": "REVERSED"
+          },
+          {
+            "case_id": "known-west-virginia-v.-epa",
+            "case_name": "West Virginia v. EPA",
+            "term": 2022,
+            "tags": [
+              "administrative law",
+              "statutory interpretation"
+            ],
+            "outcome": "REVERSED"
+          },
+          {
+            "case_id": "scotus-kisor-v-wilkie",
+            "case_name": "Kisor v. Wilkie",
+            "term": 2019,
+            "tags": [
+              "administrative law",
+              "auer deference"
+            ],
+            "outcome": "AFFIRMED"
+          },
+          {
+            "case_id": "scotus-department-of-homeland-security-v-regents-of-the-university-",
+            "case_name": "Department of Homeland Security v. Regents of the University of California",
+            "term": 2020,
+            "tags": [
+              "administrative law",
+              "daca"
+            ],
+            "outcome": "REVERSED"
+          },
+          {
+            "case_id": "scotus-biden-v-nebraska",
+            "case_name": "Biden v. Nebraska",
+            "term": 2023,
+            "tags": [
+              "administrative law",
+              "student loans"
+            ],
+            "outcome": "REVERSED"
+          }
+        ],
+        "model": {
+          "provider": "google",
+          "predict_model": "models/gemini-2.5-pro",
+          "embed_model": "models/text-embedding-004",
+          "retrieval_top_k": 5
+        }
+      }
     },
     {
       "id": "trump-v-slaughter",
@@ -45,9 +621,200 @@
       "transcript_url": "https://www.supremecourt.gov/oral_arguments/argument_transcripts/2025/25-332_7lhn.pdf",
       "case_hint": "Trump v. Slaughter (2025)",
       "docket": "25-332",
-      "tags": ["separation of powers", "presidential authority", "constitutional law", "humphrey's executor"],
-      "summary": "Constitutional challenge to Humphrey's Executor. Questions about presidential removal power over independent agency members, particularly FTC Commissioner Rebecca Slaughter. Addresses whether quasi-legislative and quasi-judicial functions can insulate officers from Article II removal authority."
+      "tags": [
+        "separation of powers",
+        "presidential authority",
+        "constitutional law",
+        "humphrey's executor"
+      ],
+      "summary": "Constitutional challenge to Humphrey's Executor. Questions about presidential removal power over independent agency members, particularly FTC Commissioner Rebecca Slaughter. Addresses whether quasi-legislative and quasi-judicial functions can insulate officers from Article II removal authority.",
+      "precomputed_prediction": {
+        "uploader_side": "PETITIONER",
+        "overall": {
+          "predicted_winner": "PETITIONER",
+          "confidence": 0.85,
+          "why": "The Court's conservative majority has consistently signaled its intent to curtail agency power and bolster presidential authority, making the overruling of Humphrey's Executor a logical next step after Seila Law and Loper Bright.",
+          "swing_justice": "roberts"
+        },
+        "votes": [
+          {
+            "justice_id": "roberts",
+            "justice_name": "Roberts, C.J.",
+            "vote": "PETITIONER",
+            "confidence": 0.75,
+            "rationale": "As an institutionalist, he may be wary of overturning a major precedent, but his opinion in Seila Law laid the groundwork. He will likely vote with the petitioner but may favor a narrower rationale."
+          },
+          {
+            "justice_id": "thomas",
+            "justice_name": "Thomas, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.99,
+            "rationale": "He is the Court's strongest proponent of the unitary executive theory and has explicitly called for overruling Humphrey's Executor in prior opinions."
+          },
+          {
+            "justice_id": "alito",
+            "justice_name": "Alito, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.95,
+            "rationale": "His jurisprudence consistently favors strong presidential power and skepticism of the administrative state. He will see this as a necessary correction to separation of powers doctrine."
+          },
+          {
+            "justice_id": "sotomayor",
+            "justice_name": "Sotomayor, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.95,
+            "rationale": "She will vote to uphold precedent, emphasizing the reliance interests and the functional need for independent agencies to ensure stable governance and expert regulation."
+          },
+          {
+            "justice_id": "kagan",
+            "justice_name": "Kagan, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.95,
+            "rationale": "She will defend the pragmatic structure of the modern administrative state and argue that Humphrey's Executor provides a workable framework that Congress has relied on for decades."
+          },
+          {
+            "justice_id": "gorsuch",
+            "justice_name": "Gorsuch, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.98,
+            "rationale": "A staunch critic of the administrative state based on separation of powers principles, he will view overruling Humphrey's Executor as essential to restoring the original constitutional design."
+          },
+          {
+            "justice_id": "kavanaugh",
+            "justice_name": "Kavanaugh, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.9,
+            "rationale": "His prior writings and judicial opinions show strong support for the unitary executive theory. He will likely see this as the logical conclusion of the Court's reasoning in Seila Law."
+          },
+          {
+            "justice_id": "barrett",
+            "justice_name": "Barrett, J.",
+            "vote": "PETITIONER",
+            "confidence": 0.9,
+            "rationale": "Her originalist and textualist methodology aligns with the petitioner's arguments against the functionalist reasoning of Humphrey's Executor."
+          },
+          {
+            "justice_id": "jackson",
+            "justice_name": "Jackson, J.",
+            "vote": "RESPONDENT",
+            "confidence": 0.9,
+            "rationale": "She will likely focus on the practical consequences of upending the administrative state and the historical practice of Congress creating independent agencies with for-cause removal."
+          }
+        ],
+        "questions": [
+          {
+            "justice_id": "roberts",
+            "justice_name": "Roberts, C.J.",
+            "question": "If we overrule Humphrey's Executor, what is the limiting principle? Does this mean the President can fire the Chairman of the Federal Reserve for disagreeing on monetary policy, and what would be the consequences for economic stability?",
+            "what_it_tests": "The real-world consequences of the petitioner's proposed rule and the strength of stare decisis for foundational administrative law precedents."
+          },
+          {
+            "justice_id": "thomas",
+            "justice_name": "Thomas, J.",
+            "question": "Counsel, where in the text of Article II, or in the history of the founding, is there any support for the idea of a 'quasi-legislative' or 'quasi-judicial' power that is independent of the President's executive authority?",
+            "what_it_tests": "The textual and originalist foundation for the respondent's defense of independent agencies."
+          },
+          {
+            "justice_id": "alito",
+            "justice_name": "Alito, J.",
+            "question": "Isn't the very concept of an 'independent' officer exercising executive power a constitutional contradiction? If they are executing the law, how can they not be subject to the control of the chief executive?",
+            "what_it_tests": "The core logic of the unitary executive theory and whether any executive function can be shielded from presidential control."
+          },
+          {
+            "justice_id": "sotomayor",
+            "justice_name": "Sotomayor, J.",
+            "question": "For nearly a century, Congress has relied on Humphrey's Executor to design agencies that require independence and expertise. What are the reliance interests at stake here, and what chaos would ensue if we suddenly told Congress that this entire structure is unconstitutional?",
+            "what_it_tests": "The practical and systemic disruption that would be caused by overruling a long-standing and foundational precedent."
+          },
+          {
+            "justice_id": "kagan",
+            "justice_name": "Kagan, J.",
+            "question": "Let's say Congress wants to create a bipartisan commission to award federal grants based on merit, insulated from political pressure. Under your theory, could the President fire a commissioner for awarding a grant to a project in a rival's district? Is that tool now gone from Congress's toolbox?",
+            "what_it_tests": "The practical ability of Congress to design government structures that can function impartially, and the limits of the petitioner's theory."
+          },
+          {
+            "justice_id": "gorsuch",
+            "justice_name": "Gorsuch, J.",
+            "question": "The Framers separated powers to protect individual liberty, not to promote government efficiency. How does concentrating the power to appoint, direct, and remove all federal officers in one person serve that core purpose of protecting liberty?",
+            "what_it_tests": "The petitioner's response to the argument that the unitary executive theory threatens the separation of powers as a safeguard for liberty."
+          },
+          {
+            "justice_id": "kavanaugh",
+            "justice_name": "Kavanaugh, J.",
+            "question": "In Seila Law, this Court carefully distinguished Humphrey's Executor, confining it to multi-member commissions. Why is that distinction no longer sufficient? What has changed to justify taking the final step of overruling it entirely rather than continuing to distinguish it?",
+            "what_it_tests": "The justification for a maximalist ruling (overruling) versus a more incremental, precedent-based approach."
+          },
+          {
+            "justice_id": "barrett",
+            "justice_name": "Barrett, J.",
+            "question": "The functionalist reasoning of Humphrey's Executor seems to be in deep tension with the textualist and originalist methodology this Court has applied in recent separation-of-powers cases. How can we reconcile these two competing approaches to constitutional interpretation?",
+            "what_it_tests": "The respondent's ability to defend the methodological underpinnings of Humphrey's Executor against the Court's current interpretive trends."
+          },
+          {
+            "justice_id": "jackson",
+            "justice_name": "Jackson, J.",
+            "question": "Congress made a specific statutory choice to provide for-cause removal protection here. Why shouldn't we view Article II as establishing a default rule of at-will removal that Congress has the authority to displace when it creates a statutory office with specific duties?",
+            "what_it_tests": "Whether the President's removal power is an absolute, non-negotiable constitutional command or a default that Congress can modify."
+          }
+        ],
+        "retrieved_cases": [
+          {
+            "case_id": "known-trump-v.-united-states",
+            "case_name": "Trump v. United States",
+            "term": 2024,
+            "tags": [
+              "separation of powers"
+            ],
+            "outcome": "AFFIRMED"
+          },
+          {
+            "case_id": "scotus-department-of-homeland-security-v-regents-of-the-university-",
+            "case_name": "Department of Homeland Security v. Regents of the University of California",
+            "term": 2020,
+            "tags": [
+              "administrative law",
+              "daca"
+            ],
+            "outcome": "REVERSED"
+          },
+          {
+            "case_id": "known-west-virginia-v.-epa",
+            "case_name": "West Virginia v. EPA",
+            "term": 2022,
+            "tags": [
+              "administrative law",
+              "statutory interpretation"
+            ],
+            "outcome": "REVERSED"
+          },
+          {
+            "case_id": "scotus-kisor-v-wilkie",
+            "case_name": "Kisor v. Wilkie",
+            "term": 2019,
+            "tags": [
+              "administrative law",
+              "auer deference"
+            ],
+            "outcome": "AFFIRMED"
+          },
+          {
+            "case_id": "known-loper-bright-enterprises-v.-raimondo",
+            "case_name": "Loper Bright Enterprises v. Raimondo",
+            "term": 2024,
+            "tags": [
+              "administrative law",
+              "statutory interpretation"
+            ],
+            "outcome": "REVERSED"
+          }
+        ],
+        "model": {
+          "provider": "google",
+          "predict_model": "models/gemini-2.5-pro",
+          "embed_model": "models/text-embedding-004",
+          "retrieval_top_k": 5
+        }
+      }
     }
   ]
 }
-
