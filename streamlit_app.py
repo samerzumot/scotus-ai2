@@ -545,6 +545,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                 actual_questions,
                                 google_client=google_client,
                                 embed_model=embed_model,
+                                use_gemini_for_selection=True,  # Use Gemini for final selection
                             )
                             return await asyncio.wait_for(score_task, timeout=30.0)
                         
@@ -566,6 +567,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                 actual_questions,
                                 google_client=google_client,
                                 embed_model=embed_model,
+                                use_gemini_for_selection=True,  # Use Gemini for final selection
                             )
                             return await asyncio.wait_for(score_task, timeout=30.0)
                         

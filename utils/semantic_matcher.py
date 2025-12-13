@@ -8,6 +8,86 @@ from typing import Any, Dict, List, Optional
 from utils.google_inference import GoogleInferenceClient
 
 
+async def select_best_semantic_match(
+    predicted_question: str,
+    candidate_questions: List[str],
+    google_client: GoogleInferenceClient,
+    model: str = "models/gemini-2.5-pro",
+) -> Dict[str, Any]:
+    """
+    Use Gemini to select the best semantic match from multiple candidate questions.
+    
+    Returns a dict with:
+    - best_question: str (the best matching question)
+    - similarity_score: float 0.0-1.0
+    - explanation: str (why this is the best match)
+    """
+    if not candidate_questions:
+        return {
+            "best_question": "",
+            "similarity_score": 0.0,
+            "explanation": "No candidate questions provided",
+        }
+    
+    if len(candidate_questions) == 1:
+        # Only one candidate, return it
+        return {
+            "best_question": candidate_questions[0],
+            "similarity_score": 0.5,  # Default score
+            "explanation": "Only one candidate question matched",
+        }
+    
+    prompt = f"""Given a predicted question from a Supreme Court oral argument, select the best matching actual question from the candidates below.
+
+PREDICTED QUESTION:
+{predicted_question}
+
+CANDIDATE ACTUAL QUESTIONS:
+{chr(10).join(f"{i+1}. {q}" for i, q in enumerate(candidate_questions))}
+
+Select the candidate question that best matches the predicted question in terms of:
+1. Same core legal issue or topic
+2. Similar question intent or purpose
+3. Relevant legal concepts discussed
+
+Return ONLY valid JSON with this structure:
+{{
+    "best_index": 1-based index of best match,
+    "similarity_score": 0.0-1.0,
+    "explanation": "brief explanation of why this is the best match"
+}}"""
+
+    system_instruction = """You are a legal analysis expert. Select the candidate question that best semantically matches the predicted question. Focus on core legal issues and intent, not exact wording. Return only valid JSON."""
+
+    try:
+        result = await google_client.generate_json(
+            model=model,
+            prompt=prompt,
+            system_instruction=system_instruction,
+            temperature=0.1,
+            max_output_tokens=512,
+        )
+        
+        best_index = int(result.get("best_index", 1)) - 1  # Convert to 0-based
+        best_index = max(0, min(len(candidate_questions) - 1, best_index))  # Clamp to valid range
+        
+        similarity_score = float(result.get("similarity_score", 0.5))
+        similarity_score = max(0.0, min(1.0, similarity_score))
+        
+        return {
+            "best_question": candidate_questions[best_index],
+            "similarity_score": similarity_score,
+            "explanation": result.get("explanation", ""),
+        }
+    except Exception as e:
+        # Fallback: return first candidate
+        return {
+            "best_question": candidate_questions[0],
+            "similarity_score": 0.5,
+            "explanation": f"Fallback selection (Gemini unavailable): {str(e)[:100]}",
+        }
+
+
 async def analyze_question_semantic_match(
     predicted_question: str,
     actual_question: str,
