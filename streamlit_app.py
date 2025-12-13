@@ -32,6 +32,7 @@ from utils.pdf import extract_text_from_pdf_bytes
 from utils.predictor import predict_votes_and_questions, _load_corpus_cached, _build_prompt, _coerce_prediction
 from utils.schemas import BacktestResult
 from utils.semantic_matcher import analyze_question_semantic_match
+from utils.scotus import JUSTICE_NAMES
 from utils.topic_extractor import extract_key_topics, find_topic_mentions_in_transcript
 from utils.transcript_finder import find_transcript_urls, extract_case_name_from_hint
 from utils.transcripts import fetch_transcript_text
@@ -62,6 +63,136 @@ async def get_session_async():
     # Reduced timeout for faster failure detection
     timeout = aiohttp.ClientTimeout(total=30, connect=10)
     return aiohttp.ClientSession(timeout=timeout)
+
+
+def _extract_question_and_answer(transcript_text: str, question_text: str) -> Optional[dict]:
+    """
+    Extract the specific question and its answer from counsel from the transcript.
+    
+    Returns a dict with:
+    - question: The full question text (including justice name)
+    - answer: The counsel's response that follows
+    """
+    if not transcript_text or not question_text:
+        return None
+    
+    # Find the question in the transcript (case-insensitive)
+    question_lower = question_text.lower().strip()
+    transcript_lower = transcript_text.lower()
+    
+    # Try to find the question text
+    question_pos = transcript_lower.find(question_lower)
+    
+    # If not found, try finding a shorter substring (first 50 chars)
+    if question_pos == -1 and len(question_lower) > 50:
+        question_pos = transcript_lower.find(question_lower[:50])
+    
+    if question_pos == -1:
+        return None
+    
+    # Find the start of the question (look backwards for "JUSTICE" or "CHIEF JUSTICE")
+    # Search backwards from question_pos to find the justice label - limit to 200 chars to avoid extra context
+    search_start = max(0, question_pos - 200)  # Look back up to 200 chars (just enough to find justice label)
+    before_question = transcript_text[search_start:question_pos]
+    
+    # Pattern to find justice question start: "JUSTICE [NAME]:" or "CHIEF JUSTICE [NAME]:"
+    # Look for the last occurrence of a justice label before the question
+    justice_pattern = r'(?:^|\n)\s*((?:CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z][A-Z\s]+\s*:)'
+    justice_matches = list(re.finditer(justice_pattern, before_question, re.IGNORECASE | re.MULTILINE))
+    
+    if justice_matches:
+        # Use the last (most recent) justice label before the question
+        justice_match = justice_matches[-1]
+        question_start = search_start + justice_match.start(1)
+    else:
+        # Fallback: look for any line starting with JUSTICE before the question
+        lines = before_question.split('\n')
+        question_start = question_pos
+        for i in range(len(lines) - 1, -1, -1):
+            line = lines[i]
+            if re.match(r'^\s*(?:CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z]', line, re.IGNORECASE):
+                # Found a justice line, use everything from here
+                question_start = search_start + len('\n'.join(lines[:i]))
+                break
+    
+    # Find the exact end of the question (at the question mark)
+    # Look for the question mark in the question text
+    question_section = transcript_text[question_start:question_pos + len(question_text) + 50]
+    question_mark_pos = question_section.find('?', question_pos - question_start)
+    
+    if question_mark_pos != -1:
+        # Question ends at the question mark
+        question_end_pos = question_start + question_mark_pos + 1
+    else:
+        # No question mark found, use the end of the matched question text
+        question_end_pos = question_pos + len(question_text)
+    
+    # Find the next speaker after the question ends
+    # Look for the next speaker label after question_end_pos
+    after_question_end = transcript_text[question_end_pos:]
+    
+    # Pattern to find next speaker: "MR.", "MS.", "MRS.", "COUNSEL", or next "JUSTICE"
+    next_speaker_pattern = r'(?:\n\s*)((?:MR\.|MS\.|MRS\.|COUNSEL|CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z])'
+    next_speaker_match = re.search(next_speaker_pattern, after_question_end, re.IGNORECASE | re.MULTILINE)
+    
+    if next_speaker_match:
+        # Check if it's counsel (answer) or another justice (next question)
+        speaker_label = next_speaker_match.group(1).upper()
+        is_counsel = any(c in speaker_label for c in ['MR.', 'MS.', 'MRS.', 'COUNSEL'])
+        
+        if is_counsel:
+            # This is the answer - extract it
+            answer_start = question_end_pos + next_speaker_match.start(1)
+            # Find where the answer ends (next speaker)
+            answer_text_after = transcript_text[answer_start:]
+            answer_end_match = re.search(
+                r'(?:\n\s*)((?:MR\.|MS\.|MRS\.|COUNSEL|CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z])',
+                answer_text_after[len(next_speaker_match.group(0)):],
+                re.IGNORECASE | re.MULTILINE
+            )
+            
+            if answer_end_match:
+                answer_end = answer_start + len(next_speaker_match.group(0)) + answer_end_match.start(1)
+            else:
+                # Answer goes to end or reasonable limit (2000 chars max)
+                answer_end = min(len(transcript_text), answer_start + 2000)
+            
+            # Extract ONLY the question (from justice label to question end) and answer (from counsel to next speaker)
+            question_full = transcript_text[question_start:question_end_pos].strip()
+            answer_full = transcript_text[answer_start:answer_end].strip()
+            
+            # Clean up the question (remove extra whitespace but preserve structure)
+            question_full = re.sub(r'[ \t]+', ' ', question_full)
+            question_full = re.sub(r'\n{3,}', '\n\n', question_full)
+            
+            # Clean up the answer
+            answer_full = re.sub(r'[ \t]+', ' ', answer_full)
+            answer_full = re.sub(r'\n{3,}', '\n\n', answer_full)
+            
+            return {
+                "question": question_full,
+                "answer": answer_full
+            }
+        else:
+            # Next speaker is another justice, so no answer found
+            # Extract ONLY the question (no extra context)
+            question_full = transcript_text[question_start:question_end_pos].strip()
+            question_full = re.sub(r'[ \t]+', ' ', question_full)
+            question_full = re.sub(r'\n{3,}', '\n\n', question_full)
+            return {
+                "question": question_full,
+                "answer": ""
+            }
+    else:
+        # No next speaker found - question might be at end of transcript
+        # Extract ONLY the question (no extra context)
+        question_full = transcript_text[question_start:question_end_pos].strip()
+        question_full = re.sub(r'[ \t]+', ' ', question_full)
+        question_full = re.sub(r'\n{3,}', '\n\n', question_full)
+        return {
+            "question": question_full,
+            "answer": ""
+        }
 
 
 def run_async(coro):
@@ -440,7 +571,10 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             st.metric("Confidence", f"{prediction.overall.confidence * 100:.0f}%")
         with col3:
             if prediction.overall.swing_justice:
-                st.metric("Swing Justice", prediction.overall.swing_justice)
+                # Convert justice_id to full name with proper capitalization
+                swing_id = prediction.overall.swing_justice.lower().strip()
+                swing_name = JUSTICE_NAMES.get(swing_id, swing_id.title())
+                st.metric("Swing Justice", swing_name)
         
         if prediction.overall.why:
             st.info(prediction.overall.why)
@@ -663,56 +797,32 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                 if actual_citations:
                                     st.caption(f"📚 Citations: {', '.join(actual_citations)}")
                                 
-                                # Show longer transcript snippet in expandable section
+                                # Show question and its answer from counsel in expandable section
                                 if transcript_url and transcript:
                                     transcript_text = transcript.get("transcript_text", "")
                                     if transcript_text:
-                                        # Find the question in transcript and extract longer context
-                                        best_actual_lower = best_actual.lower().strip()
-                                        transcript_lower = transcript_text.lower()
+                                        # Extract the question and its answer from counsel
+                                        question_answer_pair = _extract_question_and_answer(transcript_text, best_actual)
                                         
-                                        # Find position of the question in transcript (try exact match first)
-                                        question_pos = transcript_lower.find(best_actual_lower)
-                                        
-                                        # If not found, try finding a shorter substring (first 50 chars)
-                                        if question_pos == -1 and len(best_actual_lower) > 50:
-                                            question_pos = transcript_lower.find(best_actual_lower[:50])
-                                        
-                                        if question_pos != -1:
-                                            # Extract longer context (1500 chars before and after for better context)
-                                            context_start = max(0, question_pos - 1500)
-                                            context_end = min(len(transcript_text), question_pos + len(best_actual) + 1500)
-                                            context_snippet = transcript_text[context_start:context_end]
+                                        if question_answer_pair:
+                                            question_text = question_answer_pair.get("question", "")
+                                            answer_text = question_answer_pair.get("answer", "")
                                             
-                                            # Clean up snippet (preserve some line breaks for readability)
-                                            context_snippet = re.sub(r'[ \t]+', ' ', context_snippet)  # Normalize spaces
-                                            context_snippet = re.sub(r'\n{3,}', '\n\n', context_snippet)  # Max 2 newlines
-                                            context_snippet = context_snippet.strip()
-                                            
-                                            # Show in expandable section
-                                            with st.expander("📄 View full context from transcript (3000 chars)"):
-                                                # Highlight the actual question in the snippet
-                                                highlighted_snippet = context_snippet
-                                                # Try to bold the question text
-                                                if best_actual in context_snippet:
-                                                    highlighted_snippet = highlighted_snippet.replace(
-                                                        best_actual,
-                                                        f"**{best_actual}**"
-                                                    )
-                                                elif best_actual[:100] in context_snippet:
-                                                    # Partial match
-                                                    partial = best_actual[:100]
-                                                    highlighted_snippet = highlighted_snippet.replace(
-                                                        partial,
-                                                        f"**{partial}...**"
-                                                    )
+                                            with st.expander("📄 View question and answer from transcript"):
+                                                # Display the question (highlighted)
+                                                if question_text:
+                                                    st.markdown("**Question:**")
+                                                    st.markdown(f"*{question_text}*")
                                                 
-                                                st.markdown(highlighted_snippet)
-                                                st.caption(f"*Context: {len(context_snippet)} characters around the matching question*")
-                                
-                                # Link to transcript if available
-                                if transcript_url:
-                                    st.markdown(f"🔗 [View in transcript]({transcript_url})")
+                                                # Display the answer from counsel
+                                                if answer_text:
+                                                    st.markdown("**Answer from Counsel:**")
+                                                    st.markdown(answer_text)
+                                                else:
+                                                    st.caption("*(No counsel response found immediately following this question)*")
+                                                
+                                                if transcript_url:
+                                                    st.caption(f"🔗 [View full transcript]({transcript_url})")
                                 st.progress(similarity, text=f"Embedding Similarity: {similarity * 100:.0f}%")
                                 
                                 # Use Gemini to analyze semantic match
@@ -780,30 +890,55 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         if prediction.retrieved_cases:
             st.header("📚 Similar Historical Cases")
             for case in prediction.retrieved_cases:
-                # Build case name with link - always try to create a link
+                # Build case name with link - ALWAYS use Google Search API to find accurate links
                 case_display = case.case_name
                 case_link = None
+                link_source = None
                 
-                # Priority 1: Use provided transcript_url (already verified)
-                if case.transcript_url:
+                # ALWAYS try Google Search API first to find accurate case links
+                google_search_key = (os.getenv("GOOGLE_SEARCH_KEY") or "").strip()
+                if google_search_key:
+                    async def _find_case_link():
+                        session = await get_session_async()
+                        try:
+                            from utils.case_search import find_case_link_via_search
+                            return await find_case_link_via_search(
+                                case.case_name,
+                                term=case.term,
+                                session=session,
+                            )
+                        finally:
+                            await session.close()
+                    
+                    case_link = run_async(_find_case_link())
+                    if case_link:
+                        if "oyez.org" in case_link:
+                            link_source = "oyez.org (verified via search)"
+                        elif "supremecourt.gov" in case_link:
+                            link_source = "scotus.gov (verified via search)"
+                        else:
+                            link_source = "verified via search"
+                
+                # Fallback 1: Use provided transcript_url if search didn't find anything
+                if not case_link and case.transcript_url:
                     case_link = case.transcript_url
-                    link_source = "verified"
-                # Priority 2: Use docket to generate SCOTUS.gov URL
-                elif case.docket:
-                    # Generate SCOTUS.gov transcript URL from docket
-                    # Format: 21-1234 -> 21_1234.pdf (but actual format may vary)
+                    link_source = "provided (not verified)"
+                
+                # Fallback 2: Use docket to generate SCOTUS.gov URL (estimated)
+                if not case_link and case.docket:
                     docket_clean = case.docket.replace('-', '_')
                     if case.term:
                         case_link = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{case.term}/{docket_clean}.pdf"
-                        link_source = "scotus.gov"
+                        link_source = "scotus.gov (estimated)"
                     else:
                         # Try recent terms
                         for year in range(2024, 2019, -1):
                             case_link = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{year}/{docket_clean}.pdf"
                             link_source = "scotus.gov (estimated)"
                             break
-                # Priority 3: Try to find Oyez URL using Google Search API (accurate) or fallback to estimated
-                else:
+                
+                # Fallback 3: Try Oyez URL generation (estimated)
+                if not case_link:
                     async def _find_oyez():
                         session = await get_session_async()
                         try:
@@ -812,7 +947,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                 case.case_name,
                                 term=case.term,
                                 session=session,
-                                use_search=True,  # Use Google Search API if available
+                                use_search=False,  # Already tried search above
                             )
                         finally:
                             await session.close()
@@ -820,17 +955,14 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                     oyez_url = run_async(_find_oyez())
                     if oyez_url:
                         case_link = oyez_url
-                        # Check if it came from search (more accurate) or estimation
-                        google_search_key = (os.getenv("GOOGLE_SEARCH_KEY") or "").strip()
-                        if google_search_key:
-                            link_source = "oyez.org (verified via search)"
-                        else:
-                            link_source = "oyez.org (estimated)"
+                        link_source = "oyez.org (estimated)"
                 
                 if case_link:
                     case_display = f"[{case.case_name}]({case_link})"
                     if link_source and "estimated" in link_source:
                         case_display += f" ⚠️ (link may not be accurate)"
+                    elif link_source and "not verified" in link_source:
+                        case_display += f" ⚠️ (link not verified)"
                 
                 st.markdown(f"**{case_display}**")
                 if case.term:
