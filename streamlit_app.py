@@ -67,11 +67,11 @@ async def get_session_async():
 
 def _extract_question_and_answer(transcript_text: str, question_text: str) -> Optional[dict]:
     """
-    Extract the specific question and its answer from counsel from the transcript.
+    Extract the specific question from the transcript (without counsel response).
     
     Returns a dict with:
     - question: The full question text (including justice name)
-    - answer: The counsel's response that follows
+    - answer: Always empty (counsel responses not shown)
     """
     if not transcript_text or not question_text:
         return None
@@ -808,18 +808,10 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                             question_text = question_answer_pair.get("question", "")
                                             answer_text = question_answer_pair.get("answer", "")
                                             
-                                            with st.expander("📄 View question and answer from transcript"):
-                                                # Display the question (highlighted)
+                                            with st.expander("📄 View question from transcript"):
+                                                # Display only the question (no counsel response)
                                                 if question_text:
-                                                    st.markdown("**Question:**")
-                                                    st.markdown(f"*{question_text}*")
-                                                
-                                                # Display the answer from counsel
-                                                if answer_text:
-                                                    st.markdown("**Answer from Counsel:**")
-                                                    st.markdown(answer_text)
-                                                else:
-                                                    st.caption("*(No counsel response found immediately following this question)*")
+                                                    st.markdown(question_text)
                                                 
                                                 if transcript_url:
                                                     st.caption(f"🔗 [View full transcript]({transcript_url})")
