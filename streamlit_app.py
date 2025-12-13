@@ -524,7 +524,31 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         backtest_score = None
         backtest_explanation = None
         
-        if transcript_url:
+        # Check for precomputed backtest results (for sample briefs)
+        precomputed_backtest = None
+        if use_sample and selected_sample:
+            precomputed_backtest = selected_sample.get("precomputed_backtest")
+        
+        if precomputed_backtest:
+            # Use precomputed backtest results (instant, no API calls)
+            st.success("⚡ Using precomputed backtest results (instant, no API calls)")
+            backtest_score = precomputed_backtest.get("questions_score_pct", 0)
+            backtest_explanation = precomputed_backtest.get("explanation", "")
+            matches = precomputed_backtest.get("matches", [])
+            
+            # Create mapping from predicted question to match info
+            for m in matches:
+                if isinstance(m, dict):
+                    pred_q = m.get("predicted", "")
+                    if pred_q:
+                        matches_dict[pred_q] = m
+            
+            # Display backtest results immediately
+            st.header("📊 Backtest Results")
+            st.metric("Question Match Score", f"{backtest_score}%")
+            if backtest_explanation:
+                st.markdown(backtest_explanation)
+        elif transcript_url:
             st.header("📊 Backtest Results")
             backtest_progress = st.progress(0)
             backtest_status = st.empty()
