@@ -65,13 +65,12 @@ async def get_session_async():
     return aiohttp.ClientSession(timeout=timeout)
 
 
-def _extract_question_and_answer(transcript_text: str, question_text: str) -> Optional[dict]:
+def _extract_question_snippet(transcript_text: str, question_text: str) -> Optional[str]:
     """
-    Extract the specific question from the transcript (without counsel response).
+    Extract a longer snippet of the full question from the transcript.
+    Shows the complete question as it appears in the transcript, not just the matched portion.
     
-    Returns a dict with:
-    - question: The full question text (including justice name)
-    - answer: Always empty (counsel responses not shown)
+    Returns the full question text (including justice name) or None if not found.
     """
     if not transcript_text or not question_text:
         return None
@@ -91,8 +90,8 @@ def _extract_question_and_answer(transcript_text: str, question_text: str) -> Op
         return None
     
     # Find the start of the question (look backwards for "JUSTICE" or "CHIEF JUSTICE")
-    # Search backwards from question_pos to find the justice label - limit to 200 chars to avoid extra context
-    search_start = max(0, question_pos - 200)  # Look back up to 200 chars (just enough to find justice label)
+    # Search backwards from question_pos to find the justice label - limit to 300 chars to get full question
+    search_start = max(0, question_pos - 300)  # Look back up to 300 chars to capture full question
     before_question = transcript_text[search_start:question_pos]
     
     # Pattern to find justice question start: "JUSTICE [NAME]:" or "CHIEF JUSTICE [NAME]:"
@@ -115,30 +114,38 @@ def _extract_question_and_answer(transcript_text: str, question_text: str) -> Op
                 question_start = search_start + len('\n'.join(lines[:i]))
                 break
     
-    # Find the exact end of the question (at the question mark)
-    # Look for the question mark in the question text
-    question_section = transcript_text[question_start:question_pos + len(question_text) + 50]
-    question_mark_pos = question_section.find('?', question_pos - question_start)
+    # Find the end of the question - look for the next speaker or end of question
+    # Search forward from question_pos to find where the question ends
+    after_question = transcript_text[question_pos:]
     
-    if question_mark_pos != -1:
-        # Question ends at the question mark
-        question_end_pos = question_start + question_mark_pos + 1
+    # Look for the next speaker (counsel or another justice) to mark the end of the question
+    next_speaker_pattern = r'(?:\n\s*)((?:MR\.|MS\.|MRS\.|COUNSEL|CHIEF\s+JUSTICE|JUSTICE)\s+[A-Z])'
+    next_speaker_match = re.search(next_speaker_pattern, after_question, re.IGNORECASE | re.MULTILINE)
+    
+    if next_speaker_match:
+        # Question ends before the next speaker
+        question_end_pos = question_pos + next_speaker_match.start(1)
     else:
-        # No question mark found, use the end of the matched question text
-        question_end_pos = question_pos + len(question_text)
+        # No next speaker found - look for the last question mark in a reasonable range
+        # Search up to 500 chars after the matched position
+        search_end = min(len(transcript_text), question_pos + 500)
+        question_section = transcript_text[question_pos:search_end]
+        # Find the last question mark in this section
+        last_q_pos = question_section.rfind('?')
+        if last_q_pos != -1:
+            question_end_pos = question_pos + last_q_pos + 1
+        else:
+            # No question mark found, use a reasonable end point
+            question_end_pos = min(len(transcript_text), question_pos + 300)
     
-    # Extract ONLY the question (from justice label to question mark)
-    # Do not include counsel response
+    # Extract the full question snippet (from justice label to end of question)
     question_full = transcript_text[question_start:question_end_pos].strip()
     
     # Clean up the question (remove extra whitespace but preserve structure)
     question_full = re.sub(r'[ \t]+', ' ', question_full)
     question_full = re.sub(r'\n{3,}', '\n\n', question_full)
     
-    return {
-        "question": question_full,
-        "answer": ""  # Never show counsel response
-    }
+    return question_full
 
 
 def run_async(coro):
@@ -743,21 +750,16 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                 if actual_citations:
                                     st.caption(f"📚 Citations: {', '.join(actual_citations)}")
                                 
-                                # Show question and its answer from counsel in expandable section
+                                # Show full question snippet from transcript
                                 if transcript_url and transcript:
                                     transcript_text = transcript.get("transcript_text", "")
                                     if transcript_text:
-                                        # Extract the question and its answer from counsel
-                                        question_answer_pair = _extract_question_and_answer(transcript_text, best_actual)
+                                        # Extract a longer snippet of the full question from transcript
+                                        question_snippet = _extract_question_snippet(transcript_text, best_actual)
                                         
-                                        if question_answer_pair:
-                                            question_text = question_answer_pair.get("question", "")
-                                            answer_text = question_answer_pair.get("answer", "")
-                                            
-                                            with st.expander("📄 View question from transcript"):
-                                                # Display only the question (no counsel response)
-                                                if question_text:
-                                                    st.markdown(question_text)
+                                        if question_snippet:
+                                            with st.expander("📄 View full question from transcript"):
+                                                st.markdown(question_snippet)
                                                 
                                                 if transcript_url:
                                                     st.caption(f"🔗 [View full transcript]({transcript_url})")
