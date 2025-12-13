@@ -226,17 +226,33 @@ def find_topic_mentions_in_transcript(transcript_text: str, topics: List[str], c
             
             start = pos + 1
     
-    # Sort by relevance (longer topics first) and position
-    mentions.sort(key=lambda x: (-x['relevance'], x['position']))
+    # Group mentions by topic (case-insensitive) to ensure diversity
+    mentions_by_topic = {}
+    for mention in mentions:
+        topic_key = mention['topic'].lower()
+        if topic_key not in mentions_by_topic:
+            mentions_by_topic[topic_key] = []
+        mentions_by_topic[topic_key].append(mention)
     
-    # Deduplicate similar snippets
+    # Sort each topic's mentions by relevance, then take best from each topic
+    diverse_mentions = []
+    for topic_key, topic_mentions in mentions_by_topic.items():
+        # Sort by relevance (longer topics first) and position
+        topic_mentions.sort(key=lambda x: (-x['relevance'], x['position']))
+        # Take the best mention from each topic
+        diverse_mentions.append(topic_mentions[0])
+    
+    # Sort all diverse mentions by relevance
+    diverse_mentions.sort(key=lambda x: (-x['relevance'], x['position']))
+    
+    # Deduplicate similar snippets (but keep different topics)
     unique_mentions = []
     seen_snippets = set()
-    for mention in mentions:
+    for mention in diverse_mentions:
         snippet_key = mention['snippet'][:100].lower()
         if snippet_key not in seen_snippets:
             seen_snippets.add(snippet_key)
             unique_mentions.append(mention)
     
-    return unique_mentions[:5]  # Return top 5 most relevant mentions
+    return unique_mentions[:5]  # Return top 5 most relevant mentions (one per topic)
 
