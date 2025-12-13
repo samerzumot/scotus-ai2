@@ -68,9 +68,10 @@ async def get_session_async():
 def _extract_question_snippet(transcript_text: str, question_text: str, question_index: Optional[int] = None) -> Optional[str]:
     """
     Extract a simple snippet: 500 chars before and after the matched question text.
+    Bold the matching question text in the snippet.
     If question_index is provided, uses that to find the question in extracted questions list.
     
-    Returns the context snippet or None if not found.
+    Returns the context snippet with bolded matching text, or None if not found.
     """
     if not transcript_text or not question_text:
         return None
@@ -94,6 +95,21 @@ def _extract_question_snippet(transcript_text: str, question_text: str, question
     end = min(len(transcript_text), question_pos + len(question_text) + 500)
     
     snippet = transcript_text[start:end].strip()
+    
+    # Find the actual position in the original (non-lowercase) text
+    actual_start = start + question_pos - (transcript_lower[:question_pos].rfind(transcript_lower[start:question_pos]))
+    # More reliable: find the match in the snippet itself
+    snippet_lower = snippet.lower()
+    match_in_snippet = snippet_lower.find(question_lower)
+    
+    if match_in_snippet != -1:
+        # Bold the matching text
+        match_start = match_in_snippet
+        match_end = match_start + len(question_text)
+        before_match = snippet[:match_start]
+        matched_text = snippet[match_start:match_end]
+        after_match = snippet[match_end:]
+        snippet = f"{before_match}**{matched_text}**{after_match}"
     
     # Clean up whitespace
     snippet = re.sub(r'[ \t]+', ' ', snippet)
