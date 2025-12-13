@@ -813,8 +813,8 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                     if len(questions) > 1 and question != questions[-1]:
                         st.divider()
         
-        # Backtest summary (if available)
-        if backtest_score is not None:
+        # Backtest summary (if available and not already displayed via precomputed)
+        if backtest_score is not None and not precomputed_backtest:
             st.header("📊 Backtest Summary")
             st.metric("Question Match Score", f"{backtest_score}%")
             if backtest_explanation:
