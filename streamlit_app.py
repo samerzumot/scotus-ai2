@@ -890,12 +890,13 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         if prediction.retrieved_cases:
             st.header("📚 Similar Historical Cases")
             for case in prediction.retrieved_cases:
-                # Build case name with link - ALWAYS use Google Search API to find accurate links
+                # Build case name with link - ONLY use Google Search API to find verified links
+                # Never fall back to hallucinated/estimated links
                 case_display = case.case_name
                 case_link = None
                 link_source = None
                 
-                # ALWAYS try Google Search API first to find accurate case links
+                # ONLY use Google Search API to find verified case links
                 google_search_key = (os.getenv("GOOGLE_SEARCH_KEY") or "").strip()
                 if google_search_key:
                     async def _find_case_link():
@@ -919,50 +920,10 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                         else:
                             link_source = "verified via search"
                 
-                # Fallback 1: Use provided transcript_url if search didn't find anything
-                if not case_link and case.transcript_url:
-                    case_link = case.transcript_url
-                    link_source = "provided (not verified)"
-                
-                # Fallback 2: Use docket to generate SCOTUS.gov URL (estimated)
-                if not case_link and case.docket:
-                    docket_clean = case.docket.replace('-', '_')
-                    if case.term:
-                        case_link = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{case.term}/{docket_clean}.pdf"
-                        link_source = "scotus.gov (estimated)"
-                    else:
-                        # Try recent terms
-                        for year in range(2024, 2019, -1):
-                            case_link = f"https://www.supremecourt.gov/oral_arguments/argument_transcripts/{year}/{docket_clean}.pdf"
-                            link_source = "scotus.gov (estimated)"
-                            break
-                
-                # Fallback 3: Try Oyez URL generation (estimated)
-                if not case_link:
-                    async def _find_oyez():
-                        session = await get_session_async()
-                        try:
-                            from utils.transcript_finder import find_oyez_transcript_url_async
-                            return await find_oyez_transcript_url_async(
-                                case.case_name,
-                                term=case.term,
-                                session=session,
-                                use_search=False,  # Already tried search above
-                            )
-                        finally:
-                            await session.close()
-                    
-                    oyez_url = run_async(_find_oyez())
-                    if oyez_url:
-                        case_link = oyez_url
-                        link_source = "oyez.org (estimated)"
-                
+                # Only show link if it was verified via Google Search API
+                # Never show estimated, hallucinated, or unverified links
                 if case_link:
                     case_display = f"[{case.case_name}]({case_link})"
-                    if link_source and "estimated" in link_source:
-                        case_display += f" ⚠️ (link may not be accurate)"
-                    elif link_source and "not verified" in link_source:
-                        case_display += f" ⚠️ (link not verified)"
                 
                 st.markdown(f"**{case_display}**")
                 if case.term:
