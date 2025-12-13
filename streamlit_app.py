@@ -599,37 +599,6 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                 
                 st.metric("Question Match Score", f"{score}%")
                 st.markdown(explanation)
-                
-                # Show top matches
-                if matches:
-                    with st.expander("Top Question Matches"):
-                        for m in matches[:5]:
-                            # Handle both dict and tuple formats for backward compatibility
-                            if isinstance(m, dict):
-                                pred_q = m.get("predicted", "")
-                                actual_q = m.get("best_actual", "")
-                                sim = m.get("similarity", 0.0)
-                                justice_name = m.get("justice_name", "")
-                                pred_citations = m.get("predicted_citations", [])
-                                actual_citations = m.get("actual_citations", [])
-                            else:
-                                # Tuple format (legacy)
-                                pred_q, actual_q, sim = m if len(m) >= 3 else (m[0] if len(m) > 0 else "", m[1] if len(m) > 1 else "", 0.0)
-                                justice_name = ""
-                                pred_citations = []
-                                actual_citations = []
-                            
-                            # Display justice name if available
-                            if justice_name:
-                                st.markdown(f"**Justice {justice_name}**")
-                            st.markdown(f"**Predicted:** {pred_q}")
-                            if pred_citations:
-                                st.caption(f"📚 Citations: {', '.join(pred_citations)}")
-                            st.markdown(f"**Best Actual Match:** {actual_q}")
-                            if actual_citations:
-                                st.caption(f"📚 Citations: {', '.join(actual_citations)}")
-                            st.progress(sim, text=f"Similarity: {sim * 100:.0f}%")
-                            st.divider()
             elif transcript:
                 backtest_progress.empty()
                 backtest_status.empty()
