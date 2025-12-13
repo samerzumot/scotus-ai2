@@ -196,10 +196,10 @@ def find_topic_mentions_in_transcript(transcript_text: str, topics: List[str], c
             if pos == -1:
                 break
             
-            # Extract context around the mention
+            # Extract context around the mention (use oral_args_text, not full transcript)
             context_start = max(0, pos - context_chars)
-            context_end = min(len(transcript_text), pos + len(topic) + context_chars)
-            snippet = transcript_text[context_start:context_end]
+            context_end = min(len(oral_args_text), pos + len(topic) + context_chars)
+            snippet = oral_args_text[context_start:context_end]
             
             # Clean up snippet (remove extra whitespace)
             snippet = re.sub(r'\s+', ' ', snippet).strip()
