@@ -676,14 +676,17 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                                     google_client,
                                                 )
                                             )
-                                            if semantic_analysis.get("semantic_match"):
-                                                st.success(f"✅ **Semantic Match**: {semantic_analysis.get('explanation', '')}")
-                                                if semantic_analysis.get("key_topics_aligned"):
-                                                    st.caption(f"🔑 Aligned topics: {', '.join(semantic_analysis['key_topics_aligned'][:5])}")
-                                            else:
-                                                st.info(f"ℹ️ **Semantic Analysis**: {semantic_analysis.get('explanation', '')}")
+                                            # Only show if we got a valid analysis
+                                            if semantic_analysis.get("explanation") and not semantic_analysis.get("explanation", "").startswith("Semantic analysis unavailable"):
+                                                if semantic_analysis.get("semantic_match"):
+                                                    st.success(f"✅ **Semantic Match**: {semantic_analysis.get('explanation', '')}")
+                                                    if semantic_analysis.get("key_topics_aligned"):
+                                                        st.caption(f"🔑 Aligned topics: {', '.join(semantic_analysis['key_topics_aligned'][:5])}")
+                                                else:
+                                                    st.info(f"ℹ️ **Semantic Analysis**: {semantic_analysis.get('explanation', '')}")
                                         except Exception as e:
-                                            st.caption(f"⚠️ Semantic analysis unavailable: {str(e)[:100]}")
+                                            # Silently fail - don't show error to user
+                                            pass
                     
                     # Show topic mentions in transcript if available (with progress indicator)
                     if transcript_url and transcript:

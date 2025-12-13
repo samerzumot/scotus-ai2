@@ -2,6 +2,7 @@
 Use Gemini to analyze semantic match between predicted and actual questions.
 """
 
+import re
 from typing import Any, Dict, List, Optional
 
 from utils.google_inference import GoogleInferenceClient
@@ -66,11 +67,43 @@ Return ONLY valid JSON with this structure:
             "explanation": result.get("explanation", ""),
         }
     except Exception as e:
-        # Fallback to basic analysis
-        return {
-            "semantic_match": False,
-            "similarity_score": 0.0,
-            "key_topics_aligned": [],
-            "explanation": f"Analysis failed: {str(e)}",
-        }
+        error_msg = str(e)
+        # Check if it's a safety filter or blocked response
+        if "finish_reason" in error_msg or "safety" in error_msg.lower() or "blocked" in error_msg.lower():
+            # Fallback: use simple keyword matching as basic semantic analysis
+            pred_lower = predicted_question.lower()
+            actual_lower = actual_question.lower()
+            
+            # Extract key words from both
+            pred_words = set(re.findall(r'\b[a-z]{4,}\b', pred_lower))
+            actual_words = set(re.findall(r'\b[a-z]{4,}\b', actual_lower))
+            
+            # Find common significant words
+            common_words = pred_words & actual_words
+            # Filter out very common words
+            common_filtered = {w for w in common_words if w not in {
+                'what', 'this', 'that', 'would', 'could', 'should', 'does', 'mean',
+                'question', 'principle', 'about', 'there', 'their', 'where', 'when'
+            }}
+            
+            # Basic similarity based on word overlap
+            if len(pred_words) > 0 and len(actual_words) > 0:
+                word_similarity = len(common_filtered) / max(len(pred_words), len(actual_words))
+            else:
+                word_similarity = 0.0
+            
+            return {
+                "semantic_match": len(common_filtered) >= 2 or word_similarity > 0.3,
+                "similarity_score": min(1.0, word_similarity * 1.5),  # Scale up a bit
+                "key_topics_aligned": list(common_filtered)[:5],
+                "explanation": f"Basic word overlap analysis (Gemini unavailable). Found {len(common_filtered)} common terms.",
+            }
+        else:
+            # Other errors - return minimal info
+            return {
+                "semantic_match": False,
+                "similarity_score": 0.0,
+                "key_topics_aligned": [],
+                "explanation": f"Semantic analysis unavailable: {error_msg[:100]}",
+            }
 
