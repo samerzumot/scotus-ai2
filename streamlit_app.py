@@ -748,7 +748,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         st.header("❓ Predicted Questions")
         
         # Group questions by justice
-        from utils.scotus import BENCH_ORDER, JUSTICE_NAMES
+        from utils.scotus import BENCH_ORDER
         questions_by_justice = {}
         for question in prediction.questions:
             justice_id = question.justice_id
