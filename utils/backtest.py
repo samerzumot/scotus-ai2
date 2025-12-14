@@ -12,12 +12,34 @@ if TYPE_CHECKING:
 
 def extract_questions_from_transcript(transcript_text: str, *, limit: int = 200) -> List[str]:
     """
-    Deterministic heuristic: keep lines that look like questions.
-    Prefers fuller questions starting with interrogative words.
+    Deterministic heuristic: keep lines that look like questions FROM JUSTICES ONLY.
+    Filters out counsel/attorney statements by looking for Justice attribution.
     """
     transcript_text = sanitize_user_text(transcript_text, max_len=450_000)
     if not transcript_text:
         return []
+    
+    # Justice identifiers (to filter out counsel questions)
+    justice_patterns = [
+        r'JUSTICE\s+[A-Z]+',
+        r'CHIEF\s+JUSTICE',
+        r'Justice\s+[A-Za-z]+',
+        r'Chief\s+Justice',
+        r'THE\s+CHIEF\s+JUSTICE',
+        r'JUSTICE\s+[A-Z][a-z]+',
+    ]
+    justice_regex = re.compile('|'.join(justice_patterns), re.IGNORECASE)
+    
+    # Counsel/attorney patterns to exclude
+    counsel_patterns = [
+        r'GENERAL\s+[A-Z]+',
+        r'MR\.\s+[A-Z]+',
+        r'MS\.\s+[A-Z]+',
+        r'COUNSEL',
+        r'SOLICITOR',
+        r'ATTORNEY',
+    ]
+    counsel_regex = re.compile('|'.join(counsel_patterns), re.IGNORECASE)
     
     # Interrogative words that often start proper questions
     interrogatives = {'what', 'why', 'how', 'is', 'are', 'does', 'do', 'can', 'could', 
@@ -25,16 +47,29 @@ def extract_questions_from_transcript(transcript_text: str, *, limit: int = 200)
                       'aren\'t', 'doesn\'t', 'don\'t', 'wasn\'t', 'weren\'t', 'but', 'so'}
     
     candidates: List[str] = []
+    current_speaker_is_justice = False
+    
     for line in transcript_text.splitlines():
         line = re.sub(r"\s+", " ", line).strip()
-        # Require question mark and minimum 40 chars (up from 18) to filter short fragments
-        if "?" in line and len(line) >= 40:
-            candidates.append(line)
-        # Also include shorter questions (25-39 chars) if they start with an interrogative word
-        elif "?" in line and len(line) >= 25:
-            first_word = line.split()[0].lower().rstrip(',.:;') if line.split() else ""
-            if first_word in interrogatives:
+        if not line:
+            continue
+        
+        # Check if this line indicates a speaker change
+        if justice_regex.search(line):
+            current_speaker_is_justice = True
+        elif counsel_regex.search(line):
+            current_speaker_is_justice = False
+        
+        # Only extract questions when current speaker is a Justice
+        if current_speaker_is_justice:
+            # Require question mark and minimum 40 chars to filter short fragments
+            if "?" in line and len(line) >= 40:
                 candidates.append(line)
+            # Also include shorter questions (25-39 chars) if they start with an interrogative word
+            elif "?" in line and len(line) >= 25:
+                first_word = line.split()[0].lower().rstrip(',.:;') if line.split() else ""
+                if first_word in interrogatives:
+                    candidates.append(line)
     
     # Dedup, keep order
     seen = set()

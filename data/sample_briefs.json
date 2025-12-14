@@ -817,7 +817,7 @@
       },
       "precomputed_backtest": {
         "questions_score_pct": 58,
-        "explanation": "✅ **Backtest Score: 58%** (good)\n\n**Summary:** Compared 9 predicted questions against 37 actual questions from the transcript using semantic similarity.\n\n**Strong matches (9):** Questions with ≥50% similarity to actual transcript questions.\n\n**Interpretation:** The model's predicted questions show moderate alignment with actual questions. Some predictions capture key themes, but there's room for improvement in specificity and Justice-specific patterns.\n\n**Best match (Justice Alito, J.):** The predicted question \"Isn't the very concept of an 'independent' officer exercising executive power a ...\" closely matches the actual question \"Why is it obviously executive power? Because...\" (66% similarity).",
+        "explanation": "✅ **Backtest Score: 58%** (good)\n\n**Summary:** Compared 9 predicted questions against 31 actual questions from the transcript using semantic similarity.\n\n**Strong matches (9):** Questions with ≥50% similarity to actual transcript questions.\n\n**Interpretation:** The model's predicted questions show moderate alignment with actual questions. Some predictions capture key themes, but there's room for improvement in specificity and Justice-specific patterns.\n\n**Best match (Justice Alito, J.):** The predicted question \"Isn't the very concept of an 'independent' officer exercising executive power a ...\" closely matches the actual question \"Why is it obviously executive power? Because...\" (66% similarity).",
         "matches": [
           {
             "predicted": "Isn't the very concept of an 'independent' officer exercising executive power a constitutional contradiction? If they are executing the law, how can they not be subject to the control of the chief executive?",
@@ -841,13 +841,13 @@
           },
           {
             "predicted": "Counsel, where in the text of Article II, or in the history of the founding, is there any support for the idea of a 'quasi-legislative' or 'quasi-judicial' power that is independent of the President's executive authority?",
-            "best_actual": "they doing? Is it judicial power or executive",
-            "similarity": 0.6219621745024544,
+            "best_actual": "Why is it obviously executive power? Because",
+            "similarity": 0.6217366403803297,
             "justice_id": "thomas",
             "justice_name": "Thomas, J.",
             "predicted_citations": [],
             "actual_citations": [],
-            "transcript_context": "been\nconfirmed by precedent, including at least nine decisions of this Court from Ex Parte Hennen\n through Trump against United States.\n Humphrey's Executor stands as an\nindefensible outlier from that line of\n authority. Its holding that federal agencies can exercise quasi- legislative and\n quasi-judicial powers that form no part of the\nexecutive power has not withstood the test of time. That holding was gutted and refurbished\nHeritage Reporting Corporation\n\n 1\n2 3 4 5 6 7 8 9\n10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 4 Official -Subject to Final Review\nin Morrison, but this Court correctly rejected t"
+            "transcript_context": "ink it's a real\n distortion from what the founders thought, but\nthese, what you think of as executive branch agencies, including independent agencies, right, they do a lot of legislating and they do\n a lot of judging.\n And you listed it a bunch of times.\nYou said this is obviously executive power.\n Why is it obviously executive power? Because\nthey're doing a lot of rulemaking and they're\n doing a lot of adjudications, leading to enforcement.\n And -- and those are, although we've\nsaid that this is executive power in some\nHeritage Reporting Corporation\n\n 1\n2 3 4 5 6 7 8 9\n10 11 12 13 14 15 16 17 18 19 20 21 22 23 24"
           },
           {
             "predicted": "Congress made a specific statutory choice to provide for-cause removal protection here. Why shouldn't we view Article II as establishing a default rule of at-will removal that Congress has the authority to displace when it creates a statutory office with speci…",
