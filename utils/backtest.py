@@ -140,7 +140,7 @@ async def score_predicted_questions_semantic(
         # Extract major topic words from predicted questions for filtering
         from utils.topic_extractor import extract_key_topics
         
-        # Compute semantic similarities with two-stage matching
+        # Compute semantic similarities with hybrid matching (keywords + embeddings)
         matches: List[Dict[str, Any]] = []
         sims: List[float] = []
         
@@ -153,81 +153,88 @@ async def score_predicted_questions_semantic(
             if predicted_with_justice and i < len(predicted_with_justice):
                 _, justice_id, justice_name = predicted_with_justice[i]
             
-            # Stage 1: Filter actual questions by major topic word matches
-            # Extract major topics from predicted question
+            # Stage 1: Extract important phrases and keywords from predicted question
+            # Look for multi-word phrases (2-3 words) that might be proper nouns or key concepts
+            pq_lower = pq.lower()
+            
+            # Extract potential important phrases (capitalized multi-word sequences in original)
+            import re
+            # Get phrases like "Federal Reserve", "Humphrey's Executor", etc.
+            phrase_pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b'
+            important_phrases = re.findall(phrase_pattern, pq)
+            important_phrases_lower = [p.lower() for p in important_phrases]
+            
+            # Also extract key single words (5+ chars, ignoring common words)
             major_topics = extract_key_topics(pq)
-            # Get significant words (4+ chars) from topics
             topic_words = set()
-            for topic in major_topics[:5]:  # Top 5 topics
-                words = re.findall(r'\b[a-z]{4,}\b', topic.lower())
+            for topic in major_topics[:5]:
+                words = re.findall(r'\b[a-z]{5,}\b', topic.lower())
                 topic_words.update(words)
             
-            # Filter actual questions that contain at least one major topic word
-            candidate_actuals = []
-            candidate_embeddings = []
-            candidate_indices = []
+            # Remove very common words
+            stop_words = {'would', 'could', 'should', 'which', 'there', 'their', 'where', 
+                          'about', 'these', 'those', 'through', 'under', 'between'}
+            topic_words = topic_words - stop_words
+            
+            # Stage 2: Score all actual questions with hybrid approach
+            candidate_scores = []  # (question, embedding_score, keyword_score, combined_score, index)
             
             for j, aq in enumerate(actual):
                 actual_emb = actual_embeddings[j] if j < len(actual_embeddings) else None
                 aq_lower = aq.lower()
                 
-                # Check if actual question contains at least one major topic word
-                has_topic_match = any(word in aq_lower for word in topic_words if len(word) >= 4)
+                # Calculate embedding similarity
+                emb_score = 0.0
+                if pred_emb and actual_emb:
+                    emb_score = cosine_similarity(pred_emb, actual_emb)
                 
-                if has_topic_match and actual_emb:
-                    candidate_actuals.append(aq)
-                    candidate_embeddings.append(actual_emb)
-                    candidate_indices.append(j)
+                # Calculate keyword bonus
+                keyword_bonus = 0.0
+                
+                # Bonus for important phrase matches (e.g., "Federal Reserve")
+                for phrase in important_phrases_lower:
+                    if phrase in aq_lower:
+                        keyword_bonus += 0.15  # Strong bonus for phrase match
+                
+                # Bonus for topic word matches
+                matching_topics = sum(1 for word in topic_words if word in aq_lower)
+                if matching_topics > 0:
+                    keyword_bonus += min(0.10, matching_topics * 0.03)  # Up to 0.10 bonus
+                
+                # Combined score: embedding + keyword bonus (capped at 1.0)
+                combined_score = min(1.0, emb_score + keyword_bonus)
+                
+                candidate_scores.append((aq, emb_score, keyword_bonus, combined_score, j))
             
-            # Stage 2: If multiple candidates, use semantic similarity to rank
-            # If only one candidate, use it
-            # If no candidates from topic match, fall back to all questions
-            if len(candidate_actuals) == 0:
-                # Fallback: use all actual questions
-                candidate_actuals = actual
-                candidate_embeddings = actual_embeddings
-                candidate_indices = list(range(len(actual)))
+            # Sort by combined score (descending)
+            candidate_scores.sort(key=lambda x: x[3], reverse=True)
             
-            best_a = ""
-            best_s = 0.0
-            best_j = -1
-            
-            if pred_emb:
-                # Compute similarity with all candidates
-                for idx, (aq, aq_emb) in enumerate(zip(candidate_actuals, candidate_embeddings)):
-                    if aq_emb:
-                        s = cosine_similarity(pred_emb, aq_emb)
-                        if s > best_s:
-                            best_s = s
-                            best_a = aq
-                            best_j = candidate_indices[idx] if idx < len(candidate_indices) else idx
+            # Select best match
+            if candidate_scores:
+                best_a = candidate_scores[0][0]
+                best_s = candidate_scores[0][3]  # Use combined score
+                best_j = candidate_scores[0][4]
             else:
-                # If embedding failed, use first candidate
-                if candidate_actuals:
-                    best_a = candidate_actuals[0]
-                    best_s = 0.0
+                best_a = ""
+                best_s = 0.0
+                best_j = -1
             
-            # Stage 3: If multiple candidates with similar scores, use Gemini to select best
-            if len(candidate_actuals) > 1 and best_s > 0.3:
-                # Get top candidates (within 0.1 of best score)
-                top_candidates = []
-                for idx, (aq, aq_emb) in enumerate(zip(candidate_actuals, candidate_embeddings)):
-                    if aq_emb and pred_emb:
-                        s = cosine_similarity(pred_emb, aq_emb)
-                        if s >= best_s - 0.1:  # Within 0.1 of best
-                            top_candidates.append((aq, s))
+            # Stage 3: If multiple candidates with similar top scores, use Gemini to select best
+            if len(candidate_scores) > 1 and best_s > 0.3:
+                # Get top candidates (within 0.1 of best combined score)
+                top_candidates = [(cs[0], cs[3]) for cs in candidate_scores if cs[3] >= best_s - 0.1]
                 
                 # If multiple top candidates, use Gemini to select best
                 if len(top_candidates) > 1:
                     try:
                         from utils.semantic_matcher import select_best_semantic_match
                         # Only use Gemini if we have the client (will be passed separately if needed)
-                        # For now, just use the highest similarity score
+                        # For now, just use the highest combined score
                         top_candidates.sort(key=lambda x: x[1], reverse=True)
                         best_a = top_candidates[0][0]
                         best_s = top_candidates[0][1]
                     except Exception:
-                        # Fallback: use highest similarity
+                        # Fallback: use highest score from candidate_scores
                         pass
             
             sims.append(best_s)
