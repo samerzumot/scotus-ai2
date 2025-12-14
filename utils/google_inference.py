@@ -46,9 +46,19 @@ class GoogleInferenceClient:
                     temperature=temperature,
                     max_output_tokens=max_output_tokens,
                 )
+                
+                # Configure safety settings to allow legal content analysis
+                safety_settings = {
+                    genai.types.HarmCategory.HARM_CATEGORY_HARASSMENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                    genai.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                    genai.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                    genai.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                }
+                
                 response = model_obj.generate_content(
                     prompt,
                     generation_config=generation_config,
+                    safety_settings=safety_settings,
                 )
                 if not response or not response.text:
                     raise GoogleInferenceError("Google API returned empty response.")
@@ -93,9 +103,20 @@ class GoogleInferenceClient:
                     config_kwargs["response_schema"] = json_schema
                 
                 generation_config = genai.types.GenerationConfig(**config_kwargs)
+                
+                # Configure safety settings to allow legal content analysis
+                # Legal questions about Supreme Court cases can trigger default safety filters
+                safety_settings = {
+                    genai.types.HarmCategory.HARM_CATEGORY_HARASSMENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                    genai.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                    genai.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                    genai.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                }
+                
                 response = model_obj.generate_content(
                     prompt,
                     generation_config=generation_config,
+                    safety_settings=safety_settings,
                 )
                 if not response or not response.text:
                     raise GoogleInferenceError("Google API returned empty response.")
