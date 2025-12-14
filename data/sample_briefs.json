@@ -816,8 +816,8 @@
         }
       },
       "precomputed_backtest": {
-        "questions_score_pct": 53,
-        "explanation": "✅ **Backtest Score: 53%** (good)\n\n**Summary:** Compared 9 predicted questions against 54 actual questions from the transcript using semantic similarity.\n\n**Strong matches (6):** Questions with ≥50% similarity to actual transcript questions.\n**Partial matches (3):** Questions with 30-50% similarity.\n\n**Interpretation:** The model's predicted questions show moderate alignment with actual questions. Some predictions capture key themes, but there's room for improvement in specificity and Justice-specific patterns.\n\n**Best match (Justice Alito, J.):** The predicted question \"Isn't the very concept of an 'independent' officer exercising executive power a ...\" closely matches the actual question \"Why is it obviously executive power? Because...\" (60% similarity).",
+        "questions_score_pct": 52,
+        "explanation": "✅ **Backtest Score: 52%** (good)\n\n**Summary:** Compared 9 predicted questions against 37 actual questions from the transcript using semantic similarity.\n\n**Strong matches (6):** Questions with ≥50% similarity to actual transcript questions.\n**Partial matches (3):** Questions with 30-50% similarity.\n\n**Interpretation:** The model's predicted questions show moderate alignment with actual questions. Some predictions capture key themes, but there's room for improvement in specificity and Justice-specific patterns.\n\n**Best match (Justice Alito, J.):** The predicted question \"Isn't the very concept of an 'independent' officer exercising executive power a ...\" closely matches the actual question \"Why is it obviously executive power? Because...\" (60% similarity).",
         "matches": [
           {
             "predicted": "Isn't the very concept of an 'independent' officer exercising executive power a constitutional contradiction? If they are executing the law, how can they not be subject to the control of the chief executive?",
@@ -825,15 +825,6 @@
             "similarity": 0.6053964174612381,
             "justice_id": "alito",
             "justice_name": "Alito, J.",
-            "predicted_citations": [],
-            "actual_citations": []
-          },
-          {
-            "predicted": "For nearly a century, Congress has relied on Humphrey's Executor to design agencies that require independence and expertise. What are the reliance interests at stake here, and what chaos would ensue if we suddenly told Congress that this entire structure is un…",
-            "best_actual": "those agencies can be removed, correct?",
-            "similarity": 0.594509795846611,
-            "justice_id": "sotomayor",
-            "justice_name": "Sotomayor, J.",
             "predicted_citations": [],
             "actual_citations": []
           },
@@ -865,6 +856,15 @@
             "actual_citations": []
           },
           {
+            "predicted": "For nearly a century, Congress has relied on Humphrey's Executor to design agencies that require independence and expertise. What are the reliance interests at stake here, and what chaos would ensue if we suddenly told Congress that this entire structure is un…",
+            "best_actual": "severability the issue? Meaning, if you think they're wielding power that is inappropriate, why don't we sever that power --",
+            "similarity": 0.5289927023364045,
+            "justice_id": "sotomayor",
+            "justice_name": "Sotomayor, J.",
+            "predicted_citations": [],
+            "actual_citations": []
+          },
+          {
             "predicted": "In Seila Law, this Court carefully distinguished Humphrey's Executor, confining it to multi-member commissions. Why is that distinction no longer sufficient? What has changed to justify taking the final step of overruling it entirely rather than continuing to…",
             "best_actual": "question. When did the Court cross that bridge?",
             "similarity": 0.5055571810868023,
@@ -874,20 +874,20 @@
             "actual_citations": []
           },
           {
+            "predicted": "If we overrule Humphrey's Executor, what is the limiting principle? Does this mean the President can fire the Chairman of the Federal Reserve for disagreeing on monetary policy, and what would be the consequences for economic stability?",
+            "best_actual": "Federal Reserve from agencies such as the Federal Trade Commission?",
+            "similarity": 0.48323878131308307,
+            "justice_id": "roberts",
+            "justice_name": "Roberts, C.J.",
+            "predicted_citations": [],
+            "actual_citations": []
+          },
+          {
             "predicted": "The functionalist reasoning of Humphrey's Executor seems to be in deep tension with the textualist and originalist methodology this Court has applied in recent separation-of-powers cases. How can we reconcile these two competing approaches to constitutional in…",
             "best_actual": "question. When did the Court cross that bridge?",
             "similarity": 0.46782928384896966,
             "justice_id": "barrett",
             "justice_name": "Barrett, J.",
-            "predicted_citations": [],
-            "actual_citations": []
-          },
-          {
-            "predicted": "If we overrule Humphrey's Executor, what is the limiting principle? Does this mean the President can fire the Chairman of the Federal Reserve for disagreeing on monetary policy, and what would be the consequences for economic stability?",
-            "best_actual": "limiting principles?",
-            "similarity": 0.4546963965186068,
-            "justice_id": "roberts",
-            "justice_name": "Roberts, C.J.",
             "predicted_citations": [],
             "actual_citations": []
           },
