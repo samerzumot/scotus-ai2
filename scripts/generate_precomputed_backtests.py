@@ -106,19 +106,64 @@ async def generate_backtest_for_sample(sample: dict, session: aiohttp.ClientSess
             if not transcript_text or not question_text:
                 return ""
             try:
-                # Find question in transcript
+                import re
+                # Normalize the question text
                 question_lower = question_text.lower().strip()
-                idx = transcript_text.lower().find(question_lower)
+                transcript_lower = transcript_text.lower()
+                
+                # Multiple matching strategies (from strict to fuzzy)
+                idx = -1
+                
+                # Strategy 1: Exact match
+                idx = transcript_lower.find(question_lower)
+                
+                # Strategy 2: First 40 chars
                 if idx == -1 and len(question_lower) > 40:
-                    idx = transcript_text.lower().find(question_lower[:40])
+                    idx = transcript_lower.find(question_lower[:40])
+                
+                # Strategy 3: First 25 chars (handles more variations)
+                if idx == -1 and len(question_lower) > 25:
+                    idx = transcript_lower.find(question_lower[:25])
+                
+                # Strategy 4: Search for key phrases in the question
+                # Extract significant words (5+ chars) and search for them together
+                if idx == -1:
+                    words = re.findall(r'\b[a-z]{5,}\b', question_lower)
+                    significant_words = [w for w in words if w not in {'would', 'could', 'which', 'there', 'where', 'about', 'these', 'those'}]
+                    if significant_words:
+                        # Try to find a sequence of 2-3 significant words
+                        for i in range(len(significant_words) - 1):
+                            search_phrase = significant_words[i]
+                            if transcript_lower.find(search_phrase) != -1:
+                                # Found one word, now look for nearby occurrence of next word
+                                phrase_idx = transcript_lower.find(search_phrase)
+                                # Check if the next word is within 100 chars
+                                next_word = significant_words[i + 1] if i + 1 < len(significant_words) else None
+                                if next_word:
+                                    nearby = transcript_lower[phrase_idx:phrase_idx + 200]
+                                    if next_word in nearby:
+                                        idx = phrase_idx
+                                        break
+                
+                # Strategy 5: Just find first significant word as fallback
+                if idx == -1:
+                    words = re.findall(r'\b[a-z]{6,}\b', question_lower)
+                    significant_words = [w for w in words if w not in {'would', 'could', 'should', 'which', 'there', 'where', 'about', 'these', 'those', 'question'}]
+                    for word in significant_words[:3]:  # Try first 3 significant words
+                        word_idx = transcript_lower.find(word)
+                        if word_idx != -1:
+                            idx = word_idx
+                            break
+                
                 if idx == -1:
                     return ""
+                
                 # Extract context: 300 chars before and after
                 start = max(0, idx - max_context)
                 end = min(len(transcript_text), idx + len(question_text) + max_context)
                 snippet = transcript_text[start:end].strip()
+                
                 # Clean whitespace
-                import re
                 snippet = re.sub(r'[ \t]+', ' ', snippet)
                 snippet = re.sub(r'\n{3,}', '\n\n', snippet)
                 return snippet
