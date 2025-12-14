@@ -176,14 +176,16 @@ Return ONLY valid JSON with this structure:
                 "semantic_match": len(common_filtered) >= 2 or word_similarity > 0.3,
                 "similarity_score": min(1.0, word_similarity * 1.5),  # Scale up a bit
                 "key_topics_aligned": list(common_filtered)[:5],
-                "explanation": f"Basic word overlap analysis (Gemini unavailable). Found {len(common_filtered)} common terms.",
+                "explanation": f"Found {len(common_filtered)} common terms.",
+                "is_fallback": True,  # Flag to indicate this is a fallback analysis
             }
         else:
-            # Other errors - return minimal info
+            # Other errors - return minimal info with fallback flag
             return {
                 "semantic_match": False,
                 "similarity_score": 0.0,
                 "key_topics_aligned": [],
-                "explanation": f"Semantic analysis unavailable: {error_msg[:100]}",
+                "explanation": "",
+                "is_fallback": True,  # Flag to indicate this is a fallback analysis
             }
 

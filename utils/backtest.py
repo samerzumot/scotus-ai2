@@ -13,15 +13,29 @@ if TYPE_CHECKING:
 def extract_questions_from_transcript(transcript_text: str, *, limit: int = 200) -> List[str]:
     """
     Deterministic heuristic: keep lines that look like questions.
+    Prefers fuller questions starting with interrogative words.
     """
     transcript_text = sanitize_user_text(transcript_text, max_len=450_000)
     if not transcript_text:
         return []
+    
+    # Interrogative words that often start proper questions
+    interrogatives = {'what', 'why', 'how', 'is', 'are', 'does', 'do', 'can', 'could', 
+                      'would', 'should', 'will', 'which', 'who', 'when', 'where', 'isn\'t',
+                      'aren\'t', 'doesn\'t', 'don\'t', 'wasn\'t', 'weren\'t', 'but', 'so'}
+    
     candidates: List[str] = []
     for line in transcript_text.splitlines():
         line = re.sub(r"\s+", " ", line).strip()
-        if "?" in line and len(line) >= 18:
+        # Require question mark and minimum 40 chars (up from 18) to filter short fragments
+        if "?" in line and len(line) >= 40:
             candidates.append(line)
+        # Also include shorter questions (25-39 chars) if they start with an interrogative word
+        elif "?" in line and len(line) >= 25:
+            first_word = line.split()[0].lower().rstrip(',.:;') if line.split() else ""
+            if first_word in interrogatives:
+                candidates.append(line)
+    
     # Dedup, keep order
     seen = set()
     out: List[str] = []

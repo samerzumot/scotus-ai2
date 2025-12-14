@@ -766,11 +766,20 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                                 
                                                 if transcript_url:
                                                     st.caption(f"🔗 [View full transcript]({transcript_url})")
-                                st.progress(similarity, text=f"Embedding Similarity: {similarity * 100:.0f}%")
+                                # Show match quality indicator based on similarity level
+                                if similarity >= 0.7:
+                                    st.progress(similarity, text=f"🎯 Strong Match: {similarity * 100:.0f}%")
+                                elif similarity >= 0.5:
+                                    st.progress(similarity, text=f"✅ Good Match: {similarity * 100:.0f}%")
+                                elif similarity >= 0.3:
+                                    st.progress(similarity, text=f"⚠️ Partial Match: {similarity * 100:.0f}%")
+                                else:
+                                    st.progress(similarity, text=f"❌ Weak Match: {similarity * 100:.0f}%")
+                                    st.caption("ℹ️ This match has low similarity - the actual question may address different aspects of the case.")
                                 
-                                # Use Gemini to analyze semantic match
+                                # Use Gemini to analyze semantic match (skip if low similarity)
                                 google_key = (os.getenv("GOOGLE_AI_KEY") or "").strip()
-                                if google_key:
+                                if google_key and similarity >= 0.3:  # Only analyze if similarity is reasonable
                                     with st.spinner("🤖 Analyzing semantic match with Gemini..."):
                                         try:
                                             google_client = GoogleInferenceClient(api_key=google_key)
@@ -781,8 +790,11 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                                     google_client,
                                                 )
                                             )
-                                            # Only show if we got a valid analysis
-                                            if semantic_analysis.get("explanation") and not semantic_analysis.get("explanation", "").startswith("Semantic analysis unavailable"):
+                                            # Only show if NOT a fallback and we got a valid analysis
+                                            is_fallback = semantic_analysis.get("is_fallback", False)
+                                            has_explanation = semantic_analysis.get("explanation") and len(semantic_analysis.get("explanation", "")) > 0
+                                            
+                                            if not is_fallback and has_explanation:
                                                 if semantic_analysis.get("semantic_match"):
                                                     st.success(f"✅ **Semantic Match**: {semantic_analysis.get('explanation', '')}")
                                                     if semantic_analysis.get("key_topics_aligned"):
