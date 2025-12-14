@@ -749,23 +749,47 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                             if best_actual:
                                 st.divider()
                                 st.markdown("**📋 Best Matching Actual Question:**")
-                                st.markdown(f"{best_actual}")
+                                st.markdown(f"*\"{best_actual}\"*")
                                 if actual_citations:
                                     st.caption(f"📚 Citations: {', '.join(actual_citations)}")
                                 
-                                # Show full question snippet from transcript
-                                if transcript_url and transcript:
+                                # Show transcript context - check precomputed first, then extract live
+                                precomputed_context = match_info.get("transcript_context", "") if isinstance(match_info, dict) else ""
+                                precomputed_url = None
+                                if precomputed_backtest:
+                                    precomputed_url = precomputed_backtest.get("transcript_url", "")
+                                
+                                # Determine which transcript URL to use
+                                display_url = transcript_url or precomputed_url or ""
+                                
+                                if precomputed_context:
+                                    # Use precomputed context from sample brief
+                                    with st.expander("📄 View context from transcript", expanded=True):
+                                        # Highlight the matched question in the context
+                                        context_display = precomputed_context
+                                        if best_actual.lower() in context_display.lower():
+                                            # Bold the matched text
+                                            idx = context_display.lower().find(best_actual.lower())
+                                            if idx != -1:
+                                                before = context_display[:idx]
+                                                matched = context_display[idx:idx+len(best_actual)]
+                                                after = context_display[idx+len(best_actual):]
+                                                context_display = f"{before}**{matched}**{after}"
+                                        st.markdown(f"...{context_display}...")
+                                        if display_url:
+                                            st.caption(f"🔗 [View full transcript]({display_url})")
+                                elif transcript_url and transcript:
+                                    # Live extraction fallback
                                     transcript_text = transcript.get("transcript_text", "")
                                     if transcript_text:
-                                        # Extract a longer snippet of the full question from transcript
                                         question_snippet = _extract_question_snippet(transcript_text, best_actual)
-                                        
                                         if question_snippet:
-                                            with st.expander("📄 View full question from transcript"):
+                                            with st.expander("📄 View context from transcript", expanded=True):
                                                 st.markdown(question_snippet)
-                                                
-                                                if transcript_url:
-                                                    st.caption(f"🔗 [View full transcript]({transcript_url})")
+                                                st.caption(f"🔗 [View full transcript]({transcript_url})")
+                                elif display_url:
+                                    # Just show transcript link if no context available
+                                    st.caption(f"🔗 [View full transcript]({display_url})")
                                 # Show match quality indicator based on similarity level
                                 if similarity >= 0.7:
                                     st.progress(similarity, text=f"🎯 Strong Match: {similarity * 100:.0f}%")

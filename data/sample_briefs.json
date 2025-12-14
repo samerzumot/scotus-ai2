@@ -816,8 +816,8 @@
         }
       },
       "precomputed_backtest": {
-        "questions_score_pct": 52,
-        "explanation": "✅ **Backtest Score: 52%** (good)\n\n**Summary:** Compared 9 predicted questions against 37 actual questions from the transcript using semantic similarity.\n\n**Strong matches (6):** Questions with ≥50% similarity to actual transcript questions.\n**Partial matches (3):** Questions with 30-50% similarity.\n\n**Interpretation:** The model's predicted questions show moderate alignment with actual questions. Some predictions capture key themes, but there's room for improvement in specificity and Justice-specific patterns.\n\n**Best match (Justice Alito, J.):** The predicted question \"Isn't the very concept of an 'independent' officer exercising executive power a ...\" closely matches the actual question \"Why is it obviously executive power? Because...\" (60% similarity).",
+        "questions_score_pct": 51,
+        "explanation": "✅ **Backtest Score: 51%** (good)\n\n**Summary:** Compared 9 predicted questions against 37 actual questions from the transcript using semantic similarity.\n\n**Strong matches (6):** Questions with ≥50% similarity to actual transcript questions.\n**Partial matches (3):** Questions with 30-50% similarity.\n\n**Interpretation:** The model's predicted questions show moderate alignment with actual questions. Some predictions capture key themes, but there's room for improvement in specificity and Justice-specific patterns.\n\n**Best match (Justice Alito, J.):** The predicted question \"Isn't the very concept of an 'independent' officer exercising executive power a ...\" closely matches the actual question \"Why is it obviously executive power? Because...\" (60% similarity).",
         "matches": [
           {
             "predicted": "Isn't the very concept of an 'independent' officer exercising executive power a constitutional contradiction? If they are executing the law, how can they not be subject to the control of the chief executive?",
@@ -826,7 +826,8 @@
             "justice_id": "alito",
             "justice_name": "Alito, J.",
             "predicted_citations": [],
-            "actual_citations": []
+            "actual_citations": [],
+            "transcript_context": ""
           },
           {
             "predicted": "Congress made a specific statutory choice to provide for-cause removal protection here. Why shouldn't we view Article II as establishing a default rule of at-will removal that Congress has the authority to displace when it creates a statutory office with speci…",
@@ -835,7 +836,8 @@
             "justice_id": "jackson",
             "justice_name": "Jackson, J.",
             "predicted_citations": [],
-            "actual_citations": []
+            "actual_citations": [],
+            "transcript_context": "can be removed, correct?\n GENERAL SAUER: Correct. They'd be\n political --politically accountable to the\n President. And this Court has in three\ndifferent decisions addressed these kinds of\n broader implications, severability arguments,\nand come down there.\n JUSTICE KAVANAUGH: The way we've done\nit is to sever the removal restriction, not to destroy the agency, correct?\n GENERAL SAUER: That's exactly right. JUSTICE KAVANAUGH: Okay. On stare\ndecisis, you used the word \"dangerous,\" I\n think, in your opening about the independent\nHeritage Reporting Corporation\n\n 1\n2 3 4 5 6 7 8 9\n10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 52Offici"
           },
           {
             "predicted": "Counsel, where in the text of Article II, or in the history of the founding, is there any support for the idea of a 'quasi-legislative' or 'quasi-judicial' power that is independent of the President's executive authority?",
@@ -844,7 +846,8 @@
             "justice_id": "thomas",
             "justice_name": "Thomas, J.",
             "predicted_citations": [],
-            "actual_citations": []
+            "actual_citations": [],
+            "transcript_context": ""
           },
           {
             "predicted": "The Framers separated powers to protect individual liberty, not to promote government efficiency. How does concentrating the power to appoint, direct, and remove all federal officers in one person serve that core purpose of protecting liberty?",
@@ -853,7 +856,8 @@
             "justice_id": "gorsuch",
             "justice_name": "Gorsuch, J.",
             "predicted_citations": [],
-            "actual_citations": []
+            "actual_citations": [],
+            "transcript_context": ""
           },
           {
             "predicted": "For nearly a century, Congress has relied on Humphrey's Executor to design agencies that require independence and expertise. What are the reliance interests at stake here, and what chaos would ensue if we suddenly told Congress that this entire structure is un…",
@@ -862,7 +866,8 @@
             "justice_id": "sotomayor",
             "justice_name": "Sotomayor, J.",
             "predicted_citations": [],
-            "actual_citations": []
+            "actual_citations": [],
+            "transcript_context": "val authority.\n Now, if there are branch -- if there\nare agencies that kind of straddle the line between legislative and executive, that might\n present harder --\nJUSTICE SOTOMAYOR: Why is that --\nGENERAL SAUER: -- severability kinds\n of issues. Those haven't --\nJUSTICE SOTOMAYOR: -- why is that\nseverability the issue? Meaning, if you think they're wielding power that is inappropriate, why don't we sever that power --\nGENERAL SAUER: I think those very\n arguments --\nHeritage Reporting Corporation\n\n 1\n2 3 4 5 6 7 8 9\n10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 9Official -Subject to Final Review\nJUSTICE SOTOMAYOR: -- instead of the\n removal power?\n GENERAL SAUER: Well, fo"
           },
           {
             "predicted": "In Seila Law, this Court carefully distinguished Humphrey's Executor, confining it to multi-member commissions. Why is that distinction no longer sufficient? What has changed to justify taking the final step of overruling it entirely rather than continuing to…",
@@ -871,16 +876,8 @@
             "justice_id": "kavanaugh",
             "justice_name": "Kavanaugh, J.",
             "predicted_citations": [],
-            "actual_citations": []
-          },
-          {
-            "predicted": "If we overrule Humphrey's Executor, what is the limiting principle? Does this mean the President can fire the Chairman of the Federal Reserve for disagreeing on monetary policy, and what would be the consequences for economic stability?",
-            "best_actual": "Federal Reserve from agencies such as the Federal Trade Commission?",
-            "similarity": 0.48323878131308307,
-            "justice_id": "roberts",
-            "justice_name": "Roberts, C.J.",
-            "predicted_citations": [],
-            "actual_citations": []
+            "actual_citations": [],
+            "transcript_context": ""
           },
           {
             "predicted": "The functionalist reasoning of Humphrey's Executor seems to be in deep tension with the textualist and originalist methodology this Court has applied in recent separation-of-powers cases. How can we reconcile these two competing approaches to constitutional in…",
@@ -889,7 +886,8 @@
             "justice_id": "barrett",
             "justice_name": "Barrett, J.",
             "predicted_citations": [],
-            "actual_citations": []
+            "actual_citations": [],
+            "transcript_context": ""
           },
           {
             "predicted": "Let's say Congress wants to create a bipartisan commission to award federal grants based on merit, insulated from political pressure. Under your theory, could the President fire a commissioner for awarding a grant to a project in a rival's district? Is that to…",
@@ -898,9 +896,21 @@
             "justice_id": "kagan",
             "justice_name": "Kagan, J.",
             "predicted_citations": [],
-            "actual_citations": []
+            "actual_citations": [],
+            "transcript_context": "sion of 1789 that\n Congress has authority to create the -- the\n office and give it --set its emoluments and\n structure that office. But, once Congress has done that, its power there stops.\n JUSTICE JACKSON: Is that because --\nGENERAL SAUER: For Congress to --\nJUSTICE JACKSON: -- is that because\nof your democratic accountability argument?\n I'm trying to understand why you think that\nCongress is somehow less democratically accountable for the way in which it constructs\n these agencies and determines the term of\noffice of the officers.\n You -- you seem to -- to think that --\nthat there's something about the President that\nHeritage Rep"
+          },
+          {
+            "predicted": "If we overrule Humphrey's Executor, what is the limiting principle? Does this mean the President can fire the Chairman of the Federal Reserve for disagreeing on monetary policy, and what would be the consequences for economic stability?",
+            "best_actual": "mean, yeah, but what's the principle on page, what is it, 43?",
+            "similarity": 0.35539759346148125,
+            "justice_id": "roberts",
+            "justice_name": "Roberts, C.J.",
+            "predicted_citations": [],
+            "actual_citations": [],
+            "transcript_context": "you have a problem with\n Marbury on that.\n GENERAL SAUER: Well, I think the fact\nthat it's a judicial officer there doesn't\n raise all these separation -of-powers questions.\n JUSTICE KAVANAUGH: Well, what's\n the -- I mean, the other side says that's a\n completely gerrymandered answer to the -- I\nmean, yeah, but what's the principle on page, what is it, 43?\n GENERAL SAUER: The principle, I\nthink, is the separation of powers, right,\n because the -- the --\nJUSTICE KAVANAUGH: Well, they're --GENERAL SAUER: -- these removals in\nthe executive branch, if you're removing a judicial officer, it just doesn't raise all\nHeritage Reporting Corporation\n\n 1\n2"
           }
-        ]
+        ],
+        "transcript_url": "https://www.supremecourt.gov/oral_arguments/argument_transcripts/2025/25-332_7lhn.pdf"
       }
     }
   ]

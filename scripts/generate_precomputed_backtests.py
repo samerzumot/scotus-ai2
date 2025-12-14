@@ -98,35 +98,69 @@ async def generate_backtest_for_sample(sample: dict, session: aiohttp.ClientSess
             use_gemini_for_selection=True,
         )
         
-        # Convert matches to dict format (they should already be dicts, but ensure)
+        # Get transcript text for context extraction
+        transcript_text = transcript.get("transcript_text", "")
+        
+        # Helper function to extract context around a question
+        def extract_context(question_text: str, max_context: int = 300) -> str:
+            if not transcript_text or not question_text:
+                return ""
+            try:
+                # Find question in transcript
+                question_lower = question_text.lower().strip()
+                idx = transcript_text.lower().find(question_lower)
+                if idx == -1 and len(question_lower) > 40:
+                    idx = transcript_text.lower().find(question_lower[:40])
+                if idx == -1:
+                    return ""
+                # Extract context: 300 chars before and after
+                start = max(0, idx - max_context)
+                end = min(len(transcript_text), idx + len(question_text) + max_context)
+                snippet = transcript_text[start:end].strip()
+                # Clean whitespace
+                import re
+                snippet = re.sub(r'[ \t]+', ' ', snippet)
+                snippet = re.sub(r'\n{3,}', '\n\n', snippet)
+                return snippet
+            except Exception:
+                return ""
+        
+        # Convert matches to dict format with context snippets
         matches_list = []
         for m in matches:
             if isinstance(m, dict):
+                best_actual = m.get("best_actual", "")
+                context_snippet = extract_context(best_actual)
                 matches_list.append({
                     "predicted": m.get("predicted", ""),
-                    "best_actual": m.get("best_actual", ""),
+                    "best_actual": best_actual,
                     "similarity": float(m.get("similarity", 0.0)),
                     "justice_id": m.get("justice_id", ""),
                     "justice_name": m.get("justice_name", ""),
                     "predicted_citations": m.get("predicted_citations", []),
                     "actual_citations": m.get("actual_citations", []),
+                    "transcript_context": context_snippet,  # NEW: Store context snippet
                 })
             else:
                 # Legacy tuple format
+                best_actual = m[1] if len(m) > 1 else ""
+                context_snippet = extract_context(best_actual)
                 matches_list.append({
                     "predicted": m[0] if len(m) > 0 else "",
-                    "best_actual": m[1] if len(m) > 1 else "",
+                    "best_actual": best_actual,
                     "similarity": float(m[2] if len(m) > 2 else 0.0),
                     "justice_id": "",
                     "justice_name": "",
                     "predicted_citations": [],
                     "actual_citations": [],
+                    "transcript_context": context_snippet,  # NEW: Store context snippet
                 })
         
         backtest_result = {
             "questions_score_pct": score,
             "explanation": explanation,
             "matches": matches_list,
+            "transcript_url": transcript_url,  # NEW: Store transcript URL for linking
         }
         
         print(f"    ✅ Backtest complete: {score}% match")
