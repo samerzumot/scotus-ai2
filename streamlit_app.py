@@ -249,7 +249,15 @@ def main():
         # Use sample values (will be set in analyze section)
         uploader_side = "UNKNOWN"
         case_hint = ""
-        transcript_url = ""
+        # Allow user to enter/override transcript URL for sample briefs
+        default_transcript_url = selected_sample.get("transcript_url", "") if selected_sample else ""
+        transcript_url = st.text_input(
+            "Transcript URL (optional)",
+            value=default_transcript_url,
+            placeholder="https://www.oyez.org/cases/...",
+            help="For backtesting predicted questions against actual transcript. Pre-filled from sample if available.",
+            key="sample_transcript_url"
+        )
     
     # Analyze button
     if st.button("🔍 Analyze Brief", type="primary", use_container_width=True):
@@ -523,6 +531,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         matches_dict = {}  # Map predicted question text to match info
         backtest_score = None
         backtest_explanation = None
+        transcript = None  # Initialize to avoid NameError when using precomputed backtest
         
         # Check for precomputed backtest results (for sample briefs)
         precomputed_backtest = None
