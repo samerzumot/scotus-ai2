@@ -615,6 +615,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         
         # Run backtest first if transcript is available (to get matches for questions)
         matches_dict = {}  # Map predicted question text to match info
+        matches_by_justice = {}  # Map justice_id to match info (more reliable lookup)
         backtest_score = None
         backtest_explanation = None
         transcript = None  # Initialize to avoid NameError when using precomputed backtest
@@ -647,25 +648,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             if backtest_explanation:
                 st.markdown(backtest_explanation)
             
-            # Display matched questions with transcript context
-            if matches:
-                st.markdown("---")
-                st.subheader("🎯 Matched Questions from Transcript")
-                for m in matches:
-                    if not isinstance(m, dict):
-                        continue
-                    justice_name = m.get("justice_name", "Unknown")
-                    predicted = m.get("predicted", "")
-                    best_actual = m.get("best_actual", "")
-                    similarity = m.get("similarity", 0.0)
-                    transcript_context = m.get("transcript_context", "")
-                    
-                    with st.expander(f"**{justice_name}** — {similarity * 100:.0f}% match"):
-                        st.markdown(f"**Predicted:** {predicted}")
-                        st.markdown(f"**Actual from transcript:** {best_actual}")
-                        if transcript_context:
-                            st.markdown("**Transcript context:**")
-                            st.markdown(f"> {transcript_context}")
+
         elif transcript_url:
             st.header("📊 Backtest Results")
             backtest_progress = st.progress(0)
@@ -830,7 +813,10 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             
             with st.expander(title):
                 for question in questions:
-                    match_info = matches_dict.get(question.question, None)
+                    # Look up match by justice_id first (more reliable), then by question text
+                    match_info = matches_by_justice.get(justice_id)
+                    if not match_info:
+                        match_info = matches_dict.get(question.question, None)
                     
                     st.markdown(f"**Predicted Question:** {question.question}")
                     
