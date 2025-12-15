@@ -283,12 +283,10 @@ def main():
             st.info(f"📄 Using sample brief: **{selected_sample['case_name']}**")
             
             # Use precomputed prediction if available (instant results - skip all loading steps)
-            if precomputed_prediction:
-                st.success("⚡ Using precomputed predictions (instant results, no API calls)")
+            if use_precomputed and precomputed_prediction:
                 from utils.schemas import VoteQuestionPrediction
                 try:
                     prediction = VoteQuestionPrediction.model_validate(precomputed_prediction)
-                    use_precomputed = True
                     # Skip directly to displaying results - no progress bars, no API calls
                 except Exception as e:
                     st.warning(f"⚠️ Could not load precomputed prediction: {e}. Generating fresh prediction...")
@@ -627,24 +625,47 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             precomputed_backtest = selected_sample.get("precomputed_backtest")
         
         if precomputed_backtest:
-            # Use precomputed backtest results (instant, no API calls)
-            st.success("⚡ Using precomputed backtest results (instant, no API calls)")
+            # Use precomputed backtest results
             backtest_score = precomputed_backtest.get("questions_score_pct", 0)
             backtest_explanation = precomputed_backtest.get("explanation", "")
             matches = precomputed_backtest.get("matches", [])
             
-            # Create mapping from predicted question to match info
+            # Create mapping by justice_id for finding matches later
+            matches_by_justice = {}
             for m in matches:
                 if isinstance(m, dict):
                     pred_q = m.get("predicted", "")
+                    justice_id = m.get("justice_id", "")
                     if pred_q:
                         matches_dict[pred_q] = m
+                    if justice_id:
+                        matches_by_justice[justice_id] = m
             
-            # Display backtest results immediately
+            # Display backtest results with matches
             st.header("📊 Backtest Results")
             st.metric("Question Match Score", f"{backtest_score}%")
             if backtest_explanation:
                 st.markdown(backtest_explanation)
+            
+            # Display matched questions with transcript context
+            if matches:
+                st.markdown("---")
+                st.subheader("🎯 Matched Questions from Transcript")
+                for m in matches:
+                    if not isinstance(m, dict):
+                        continue
+                    justice_name = m.get("justice_name", "Unknown")
+                    predicted = m.get("predicted", "")
+                    best_actual = m.get("best_actual", "")
+                    similarity = m.get("similarity", 0.0)
+                    transcript_context = m.get("transcript_context", "")
+                    
+                    with st.expander(f"**{justice_name}** — {similarity * 100:.0f}% match"):
+                        st.markdown(f"**Predicted:** {predicted}")
+                        st.markdown(f"**Actual from transcript:** {best_actual}")
+                        if transcript_context:
+                            st.markdown("**Transcript context:**")
+                            st.markdown(f"> {transcript_context}")
         elif transcript_url:
             st.header("📊 Backtest Results")
             backtest_progress = st.progress(0)
