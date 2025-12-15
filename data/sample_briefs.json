@@ -1,199 +1,200 @@
 {
   "sample_briefs": [
     {
-      "id": "williams-v-reeds",
-      "case_name": "Williams v. Reeds",
-      "term": 2024,
+      "id": "williams-v-reed",
+      "case_name": "Williams v. Reed",
+      "term": 2025,
       "uploader_side": "PETITIONER",
-      "brief_text": "PETITION FOR WRIT OF CERTIORARI\n\nSUMMARY\nThis case presents the question whether the lower court erred in holding that the challenged statute violates the First Amendment's protection of free speech. The petitioner argues that the statute imposes an impermissible content-based restriction on speech that cannot survive strict scrutiny.\n\nThe statute at issue requires certain disclosures that petitioners contend are unduly burdensome and chill protected speech. The lower court's decision conflicts with this Court's precedents establishing that content-based restrictions on speech are presumptively unconstitutional and must be narrowly tailored to serve a compelling government interest.\n\nARGUMENT\nI. The Statute Imposes a Content-Based Restriction on Speech\n\nThe challenged statute targets speech based on its content, requiring special disclosures for certain types of communications. This Court has consistently held that content-based restrictions are subject to strict scrutiny. See Reed v. Town of Gilbert, 576 U.S. 155 (2015).\n\nII. The Statute Cannot Survive Strict Scrutiny\n\nEven if the government's interest is compelling, the statute is not narrowly tailored. Less restrictive alternatives exist that would serve the government's interest without burdening protected speech to the same degree.\n\nIII. The Statute Chills Protected Speech\n\nThe disclosure requirements create a substantial burden that deters speakers from engaging in protected expression. This chilling effect violates the First Amendment's core protections.\n\nCONCLUSION\nFor the foregoing reasons, the petition for writ of certiorari should be granted.",
-      "transcript_url": "https://www.oyez.org/cases/2024/williams-v-reeds",
-      "case_hint": "Williams v. Reeds (2024)",
-      "docket": "23-1234",
+      "brief_text": "PETITION FOR WRIT OF CERTIORARI\n\nSUPREME COURT OF THE UNITED STATES\nNo. 23-191\n\nNANCY WILLIAMS, et al., Petitioners,\nv.\nGREG REED, Secretary of Labor, ALABAMA DEPARTMENT OF LABOR, Respondent.\n\nQUESTION PRESENTED\n\nWhether exhaustion of state administrative remedies is required to bring claims under 42 U.S.C. § 1983 in state court.\n\nINTRODUCTION\n\nPetitioners are unemployed workers in Alabama who have been waiting years for decisions on their unemployment benefits claims. Under Alabama law, the Department of Labor must promptly decide unemployment claims. Yet for these petitioners, years have passed without resolution. Some do not know the status of their applications. Others have had their applications denied without explanation.\n\nWhen petitioners sued under 42 U.S.C. § 1983 to vindicate their federal rights under the Due Process Clause and the Social Security Act, the Alabama courts dismissed their claims. The Alabama Supreme Court held that petitioners were required to exhaust their state administrative remedies before bringing § 1983 claims in state court.\n\nThis ruling creates an impossible catch-22: Petitioners cannot sue to expedite the administrative process because they have not yet completed it. The state's exhaustion requirement effectively immunizes state officials from § 1983 claims challenging delays in the administrative process.\n\nARGUMENT\n\nI. Section 1983 Does Not Require Exhaustion of State Administrative Remedies\n\nThis Court has long held that § 1983 plaintiffs need not exhaust state administrative remedies. Patsy v. Board of Regents of Fla., 457 U.S. 496 (1982). The Supremacy Clause prohibits state courts from imposing additional procedural requirements on federal civil rights claims that would effectively nullify § 1983.\n\nII. The Alabama Supreme Court's Application of State Exhaustion Requirements Immunizes State Officials From Federal Claims\n\nWhen a state's application of exhaustion requirements creates a catch-22 that prevents plaintiffs from ever obtaining federal relief, that application is preempted. A state law that immunizes government conduct from § 1983 suits is preempted even when litigation occurs in state court. Felder v. Casey, 487 U.S. 131 (1988).\n\nIII. State Courts Cannot Deny § 1983 Claims on Failure-to-Exhaust Grounds When Delays Are the Subject of the Challenge\n\nRequiring plaintiffs to complete state administrative processes before suing for delays in those very processes defeats the purpose of § 1983. This Court should hold that where exhaustion requirements effectively bar § 1983 claims challenging administrative delays, those requirements are preempted.\n\nCONCLUSION\n\nFor the foregoing reasons, the petition for writ of certiorari should be granted and the judgment of the Alabama Supreme Court reversed.",
+      "transcript_url": "https://www.supremecourt.gov/oral_arguments/argument_transcripts/2024/23-191_o759.pdf",
+      "case_hint": "Williams v. Reed (2025)",
+      "docket": "23-191",
       "tags": [
-        "first amendment",
-        "free speech",
-        "constitutional law"
+        "section 1983",
+        "due process",
+        "administrative exhaustion",
+        "state courts"
       ],
-      "summary": "First Amendment challenge to content-based speech restrictions. Questions about strict scrutiny, narrow tailoring, and chilling effects on protected speech.",
+      "summary": "Whether exhaustion of state administrative remedies is required to bring § 1983 claims in state court. Alabama workers sued over delays in unemployment benefits processing. SCOTUS held 5-4 that state exhaustion requirements cannot immunize officials from § 1983 claims challenging administrative delays.",
       "precomputed_prediction": {
         "uploader_side": "PETITIONER",
         "overall": {
-          "predicted_winner": "RESPONDENT",
-          "confidence": 0.85,
-          "why": "The Court's current majority has consistently favored free speech rights over government regulations that compel or chill speech, as seen in cases like 303 Creative and Janus.",
-          "swing_justice": "roberts"
+          "predicted_winner": "PETITIONER",
+          "confidence": 0.65,
+          "why": "The Court will likely find that state exhaustion requirements cannot be applied to bar § 1983 claims when the delay itself is what's being challenged - creating an impossible catch-22. However, the procedural complexity makes this a close case.",
+          "swing_justice": "kavanaugh"
         },
         "votes": [
           {
             "justice_id": "roberts",
             "justice_name": "Roberts, C.J.",
-            "vote": "RESPONDENT",
-            "confidence": 0.8,
-            "rationale": "Chief Justice Roberts will likely find the disclosure requirement is a content-based restriction that is not narrowly tailored, but may write a narrow opinion to avoid setting an overly broad precedent against all disclosure laws."
+            "vote": "PETITIONER",
+            "confidence": 0.65,
+            "rationale": "Chief Justice Roberts will likely focus on the practical impossibility of the catch-22 situation, though may prefer narrower grounds focusing on the specific Alabama procedural rule rather than broad preemption principles."
           },
           {
             "justice_id": "thomas",
             "justice_name": "Thomas, J.",
             "vote": "RESPONDENT",
-            "confidence": 0.95,
-            "rationale": "Justice Thomas has a very broad view of First Amendment protections and is deeply skeptical of compelled speech or disclosure regimes, which he often views as unconstitutional burdens on anonymous speech."
+            "confidence": 0.70,
+            "rationale": "Justice Thomas may view this as a federalism issue where state courts should have discretion over their own procedural rules. His originalist approach may find historical support for exhaustion requirements."
           },
           {
             "justice_id": "alito",
             "justice_name": "Alito, J.",
             "vote": "RESPONDENT",
-            "confidence": 0.9,
-            "rationale": "Justice Alito is a staunch defender of free speech, particularly when government regulation could lead to a chilling effect on controversial or unpopular viewpoints. He will likely see this statute as a tool for harassment."
+            "confidence": 0.65,
+            "rationale": "Justice Alito often defers to state procedures and may be skeptical of extending federal preemption to state court procedural rules, viewing this as proper respect for state judicial autonomy."
           },
           {
             "justice_id": "sotomayor",
             "justice_name": "Sotomayor, J.",
             "vote": "PETITIONER",
             "confidence": 0.85,
-            "rationale": "Justice Sotomayor is often more willing to balance speech rights against compelling government interests like transparency or anti-discrimination, and will likely find the disclosure requirement serves a valid public purpose."
+            "rationale": "Justice Sotomayor is a strong defender of civil rights plaintiffs' access to courts and will likely view Alabama's exhaustion rule as functionally immunizing officials from § 1983 accountability."
           },
           {
             "justice_id": "kagan",
             "justice_name": "Kagan, J.",
             "vote": "PETITIONER",
-            "confidence": 0.75,
-            "rationale": "Justice Kagan will likely focus on precedent allowing for disclosure in other contexts (e.g., campaign finance) and may argue that this regulation is a reasonable, content-neutral means of achieving a legitimate government objective."
+            "confidence": 0.80,
+            "rationale": "Justice Kagan will focus on the practical effect of Alabama's rule - if you can't sue until the process ends, but the delay IS the violation, the rule provides effective immunity. This conflicts with § 1983's protective purpose."
           },
           {
             "justice_id": "gorsuch",
             "justice_name": "Gorsuch, J.",
             "vote": "RESPONDENT",
-            "confidence": 0.95,
-            "rationale": "As the author of 303 Creative, Justice Gorsuch is highly protective of speech rights against government compulsion and will almost certainly view this as an impermissible content-based law that fails strict scrutiny."
+            "confidence": 0.60,
+            "rationale": "Justice Gorsuch's textualist approach and respect for state court autonomy may lead him to side with Alabama, though the catch-22 argument could appeal to his sense of fairness in civil procedure."
           },
           {
             "justice_id": "kavanaugh",
             "justice_name": "Kavanaugh, J.",
-            "vote": "RESPONDENT",
-            "confidence": 0.9,
-            "rationale": "Justice Kavanaugh has a consistent record of voting to protect free speech against government encroachment and is likely to agree with the petitioner that the statute is a content-based restriction that chills protected expression."
+            "vote": "PETITIONER",
+            "confidence": 0.70,
+            "rationale": "Justice Kavanaugh is likely to be the swing vote. He may be persuaded that state procedural rules cannot create an absolute bar to federal civil rights claims, particularly when the rule creates an impossible catch-22."
           },
           {
             "justice_id": "barrett",
             "justice_name": "Barrett, J.",
             "vote": "RESPONDENT",
-            "confidence": 0.9,
-            "rationale": "Justice Barrett's jurisprudence suggests a strong inclination to apply strict scrutiny to content-based regulations, and she is unlikely to be persuaded that this statute is narrowly tailored to a compelling government interest."
+            "confidence": 0.55,
+            "rationale": "Justice Barrett may defer to state procedural discretion but could be persuaded by the practical impossibility argument. Her vote is difficult to predict on this procedural issue."
           },
           {
             "justice_id": "jackson",
             "justice_name": "Jackson, J.",
             "vote": "PETITIONER",
-            "confidence": 0.8,
-            "rationale": "Justice Jackson is likely to credit the government's stated interest behind the disclosure law and may argue that the burden on speech is incidental and justified by the need for transparency and public information."
+            "confidence": 0.85,
+            "rationale": "Justice Jackson will likely emphasize the importance of § 1983 as a mechanism for protecting constitutional rights and reject procedural rules that effectively nullify those protections."
           }
         ],
         "questions": [
           {
             "justice_id": "roberts",
             "justice_name": "Roberts, C.J.",
-            "question": "Counsel, what is the limiting principle to your argument? If we rule for you, are there any disclosure requirements related to campaign finance, lobbying, or securities that would remain constitutional?",
-            "what_it_tests": "The breadth of the proposed rule and its potential to unsettle established precedent in other areas of law."
+            "question": "Counsel, what is the limiting principle of your argument? If we say state exhaustion rules cannot apply to § 1983 claims, does that mean every state procedural requirement is preempted whenever it might delay a federal civil rights claim?",
+            "what_it_tests": "Whether there's a principled way to distinguish this catch-22 situation from ordinary procedural requirements."
           },
           {
             "justice_id": "thomas",
             "justice_name": "Thomas, J.",
-            "question": "Where is the historical evidence from the Founding era that the government possessed the power to compel this sort of disclosure from a private citizen engaged in ordinary speech?",
-            "what_it_tests": "The originalist justification for the government's power to enact such a statute."
+            "question": "Where in the text or history of § 1983 do we find that state courts cannot apply their own procedural rules to claims brought in their own courts? Isn't this a question of state court procedure?",
+            "what_it_tests": "The textualist and originalist basis for preempting state procedural rules."
           },
           {
             "justice_id": "alito",
             "justice_name": "Alito, J.",
-            "question": "Let's consider the practical reality. Isn't the primary effect of a law like this to create a list of disfavored speakers for opponents to harass and intimidate? How is that not a substantial chilling effect on speech?",
-            "what_it_tests": "The real-world consequences of the law and the severity of its chilling effect on protected expression."
+            "question": "Alabama says its exhaustion rule applies to all claims, not just § 1983 claims. Isn't it just a neutral rule of procedure? Why should we treat it as federally preempted when it doesn't single out federal claims?",
+            "what_it_tests": "Whether the rule's facial neutrality protects it from preemption."
           },
           {
             "justice_id": "sotomayor",
             "justice_name": "Sotomayor, J.",
-            "question": "What about the public's right to know who is speaking? If the government has a compelling interest in preventing fraud or informing the public, why isn't a simple disclosure requirement a reasonable way to achieve that?",
-            "what_it_tests": "The weight of the government's asserted interest and whether the speaker's rights automatically override the public good."
+            "question": "Let me understand the practical effect here. Your clients are waiting years for benefits decisions. If they have to exhaust first, and the delay IS the violation, they can never sue. Isn't that exactly the kind of immunity Felder v. Casey prohibits?",
+            "what_it_tests": "Whether the rule effectively immunizes state officials from § 1983 accountability."
           },
           {
             "justice_id": "kagan",
             "justice_name": "Kagan, J.",
-            "question": "We have upheld disclosure requirements in other contexts, like in Buckley v. Valeo. How do you distinguish this case? Why is the burden on speech here different in kind, and not just in degree, from those we have previously permitted?",
-            "what_it_tests": "The advocate's ability to draw a principled line between this case and established precedents that allow for compelled disclosure."
+            "question": "In Patsy v. Board of Regents, we held that § 1983 plaintiffs don't have to exhaust state administrative remedies before filing in federal court. What's the argument that state courts can impose an exhaustion requirement that federal courts cannot?",
+            "what_it_tests": "The principle of uniformity - whether § 1983 claims should be treated the same in state and federal courts."
           },
           {
             "justice_id": "gorsuch",
             "justice_name": "Gorsuch, J.",
-            "question": "This law appears to apply to a speaker only when they speak about a certain topic. How is that not a classic content-based restriction under Reed v. Town of Gilbert, which would trigger strict scrutiny?",
-            "what_it_tests": "The proper application of the Court's bright-line rule for identifying content-based speech restrictions."
+            "question": "I'm sympathetic to your catch-22 argument, but how do we write a rule that addresses this situation without disrupting legitimate state procedural requirements? What's the test courts should apply?",
+            "what_it_tests": "The workability of a rule distinguishing preempted from permissible state procedures."
           },
           {
             "justice_id": "kavanaugh",
             "justice_name": "Kavanaugh, J.",
-            "question": "Assuming for the sake of argument that the government's interest is compelling, what evidence is there that this specific disclosure mandate is the least restrictive means of achieving that interest?",
-            "what_it_tests": "The government's justification for its chosen method and whether it adequately considered less speech-restrictive alternatives."
+            "question": "Isn't the core problem here that Alabama's rule, as applied, makes it impossible to challenge delay? If the claim is about delay, and you have to complete the process to sue, you can never vindicate your rights. That seems fundamentally inconsistent with § 1983.",
+            "what_it_tests": "The functional impossibility of the catch-22 and its conflict with § 1983's purpose."
           },
           {
             "justice_id": "barrett",
             "justice_name": "Barrett, J.",
-            "question": "How should a court determine when a disclosure requirement becomes 'unduly burdensome'? Are we to look at the financial cost, the risk of reprisal, or something else? And what level of deference do we owe the legislature's judgment on that question?",
-            "what_it_tests": "The legal standard for evaluating the burden on speech and the proper role of the judiciary versus the legislature."
+            "question": "Help me understand the scope of Felder v. Casey. That case involved a notice-of-claim statute. Is the principle that ANY state procedural rule that delays or limits § 1983 claims is preempted, or is there something specific about immunizing rules?",
+            "what_it_tests": "The scope of Felder's preemption principle and its application here."
           },
           {
             "justice_id": "jackson",
             "justice_name": "Jackson, J.",
-            "question": "Does the level of First Amendment protection here depend on the context of the speech? For example, would the analysis be different if this were commercial speech versus political speech, and who gets to make that determination?",
-            "what_it_tests": "Whether a categorical approach is appropriate or if the specific context and nature of the speech should alter the constitutional analysis."
+            "question": "These are unemployed workers waiting years for benefits while their families struggle. If we rule for the State, what remedy do they have? Can they get any meaningful relief for delays that have already occurred?",
+            "what_it_tests": "The practical consequences for plaintiffs and the availability of alternative remedies."
           }
         ],
         "retrieved_cases": [
           {
-            "case_id": "scotus-masterpiece-cakeshop-v-colorado-civil-rights-commission",
-            "case_name": "Masterpiece Cakeshop v. Colorado Civil Rights Commission",
-            "term": 2018,
+            "case_id": "scotus-patsy-v-board-of-regents",
+            "case_name": "Patsy v. Board of Regents of Florida",
+            "term": 1982,
             "tags": [
-              "first amendment",
-              "free exercise"
+              "section 1983",
+              "administrative exhaustion"
             ],
             "outcome": "REVERSED"
           },
           {
-            "case_id": "scotus-counterman-v-colorado",
-            "case_name": "Counterman v. Colorado",
-            "term": 2023,
+            "case_id": "scotus-felder-v-casey",
+            "case_name": "Felder v. Casey",
+            "term": 1988,
             "tags": [
-              "first amendment",
-              "true threats"
+              "section 1983",
+              "state procedures"
             ],
             "outcome": "REVERSED"
           },
           {
-            "case_id": "known-303-creative-llc-v.-elenis",
-            "case_name": "303 Creative LLC v. Elenis",
-            "term": 2023,
+            "case_id": "scotus-howlett-v-rose",
+            "case_name": "Howlett v. Rose",
+            "term": 1990,
             "tags": [
-              "first amendment",
-              "constitutional law"
-            ],
-            "outcome": "AFFIRMED"
-          },
-          {
-            "case_id": "scotus-janus-v-afscme",
-            "case_name": "Janus v. AFSCME",
-            "term": 2018,
-            "tags": [
-              "first amendment",
-              "public sector unions"
+              "section 1983",
+              "state courts"
             ],
             "outcome": "REVERSED"
           },
           {
-            "case_id": "scotus-arizona-state-legislature-v-arizona-independent-redistrictin",
-            "case_name": "Arizona State Legislature v. Arizona Independent Redistricting Commission",
-            "term": 2015,
+            "case_id": "scotus-monroe-v-pape",
+            "case_name": "Monroe v. Pape",
+            "term": 1961,
             "tags": [
-              "elections clause",
-              "redistricting"
+              "section 1983",
+              "civil rights"
             ],
-            "outcome": "AFFIRMED"
+            "outcome": "REVERSED"
+          },
+          {
+            "case_id": "scotus-haywood-v-drown",
+            "case_name": "Haywood v. Drown",
+            "term": 2009,
+            "tags": [
+              "section 1983",
+              "state courts"
+            ],
+            "outcome": "REVERSED"
           }
         ],
         "model": {

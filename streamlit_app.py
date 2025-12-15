@@ -510,8 +510,140 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         if prediction.overall.why:
             st.info(prediction.overall.why)
         
-        # Votes
+        # Votes - Visual Bench Layout
         st.header("👨‍⚖️ Predicted Votes")
+        
+        # Create a visual bench layout (traditional SCOTUS seating)
+        # Bench order from left to right as viewed from audience:
+        # Row 1 (back): Thomas, Sotomayor, Alito, Kagan
+        # Row 2 (front): Jackson, Kavanaugh, Roberts (center), Gorsuch, Barrett
+        
+        # Build vote lookup by justice_id
+        votes_by_id = {v.justice_id.lower(): v for v in prediction.votes}
+        
+        def get_vote_style(vote_value, confidence):
+            """Return HTML styling for vote display."""
+            colors = {
+                "PETITIONER": ("#1e40af", "🟦"),  # Blue
+                "RESPONDENT": ("#dc2626", "🟥"),  # Red
+                "UNCERTAIN": ("#ca8a04", "🟨"),   # Yellow
+            }
+            color, emoji = colors.get(vote_value, ("#6b7280", "⚪"))
+            opacity = 0.4 + (confidence * 0.6)  # Scale opacity with confidence
+            return color, emoji, opacity
+        
+        # Count votes for summary
+        pet_votes = sum(1 for v in prediction.votes if v.vote == "PETITIONER")
+        resp_votes = sum(1 for v in prediction.votes if v.vote == "RESPONDENT")
+        uncertain_votes = sum(1 for v in prediction.votes if v.vote == "UNCERTAIN")
+        
+        # Display vote count summary
+        vote_summary_cols = st.columns(3)
+        with vote_summary_cols[0]:
+            st.metric("🟦 Petitioner", pet_votes)
+        with vote_summary_cols[1]:
+            st.metric("🟥 Respondent", resp_votes)
+        with vote_summary_cols[2]:
+            st.metric("🟨 Uncertain", uncertain_votes)
+        
+        st.markdown("---")
+        st.markdown("**Supreme Court Bench Layout** *(as viewed from audience)*")
+        
+        # Build bench layout HTML with responsive design
+        bench_layout_html = """
+        <style>
+        .bench-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin: 20px 0;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .bench-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .justice-card {
+            padding: 12px 16px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 100px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .justice-card:hover {
+            transform: scale(1.05);
+        }
+        .justice-name {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .justice-vote {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .justice-conf {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        .chief-justice {
+            border: 2px solid gold;
+        }
+        </style>
+        """
+        
+        def make_justice_card(justice_id, display_name, is_chief=False):
+            vote = votes_by_id.get(justice_id.lower())
+            if vote:
+                color, emoji, opacity = get_vote_style(vote.vote, vote.confidence)
+                chief_class = "chief-justice" if is_chief else ""
+                return f'''
+                <div class="justice-card {chief_class}" style="background-color: {color}; opacity: {opacity};">
+                    <div class="justice-name">{emoji} {display_name}</div>
+                    <div class="justice-vote">{vote.vote}</div>
+                    <div class="justice-conf">{vote.confidence * 100:.0f}%</div>
+                </div>
+                '''
+            return f'<div class="justice-card" style="background-color: #6b7280;"><div class="justice-name">{display_name}</div><div class="justice-vote">N/A</div></div>'
+        
+        # Front row (5 justices, Roberts center)
+        front_row = f'''
+        <div class="bench-row">
+            {make_justice_card("jackson", "Jackson")}
+            {make_justice_card("kavanaugh", "Kavanaugh")}
+            {make_justice_card("roberts", "Roberts", is_chief=True)}
+            {make_justice_card("gorsuch", "Gorsuch")}
+            {make_justice_card("barrett", "Barrett")}
+        </div>
+        '''
+        
+        # Back row (4 justices)
+        back_row = f'''
+        <div class="bench-row">
+            {make_justice_card("thomas", "Thomas")}
+            {make_justice_card("sotomayor", "Sotomayor")}
+            {make_justice_card("alito", "Alito")}
+            {make_justice_card("kagan", "Kagan")}
+        </div>
+        '''
+        
+        # Combine and display
+        full_bench_html = bench_layout_html + f'''
+        <div class="bench-container">
+            {back_row}
+            {front_row}
+        </div>
+        '''
+        st.markdown(full_bench_html, unsafe_allow_html=True)
+        
+        # Detailed vote cards below
+        st.markdown("---")
+        st.subheader("📋 Detailed Vote Predictions")
         vote_cols = st.columns(3)
         for idx, vote in enumerate(prediction.votes):
             col_idx = idx % 3
