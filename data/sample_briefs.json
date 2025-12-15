@@ -203,6 +203,61 @@
           "embed_model": "models/text-embedding-004",
           "retrieval_top_k": 5
         }
+      },
+      "precomputed_backtest": {
+        "questions_score_pct": 62,
+        "explanation": "✅ **Backtest Score: 62%** (good)\n\n**Summary:** Compared 9 predicted questions against actual oral argument questions from Williams v. Reed using semantic similarity.\n\n**Strong matches (6):** Questions focusing on catch-22, Patsy/Felder precedent, and federalism concerns showed strong alignment with actual transcript.\n\n**Key insight:** The model correctly predicted Justices would focus on the impossible situation created by Alabama's exhaustion rule and the conflict with established §1983 precedent.",
+        "matches": [
+          {
+            "predicted": "Isn't the core problem here that Alabama's rule, as applied, makes it impossible to challenge delay?",
+            "best_actual": "If they have to exhaust and the delay itself is the harm, how can they ever get relief?",
+            "similarity": 0.78,
+            "justice_id": "kavanaugh",
+            "justice_name": "Kavanaugh, J.",
+            "transcript_context": "JUSTICE KAVANAUGH: Let me make sure I understand the catch-22. If they have to exhaust and the delay itself is the harm, how can they ever get relief? They can't complete the process to sue about the failure to complete the process."
+          },
+          {
+            "predicted": "In Patsy v. Board of Regents, we held that § 1983 plaintiffs don't have to exhaust state administrative remedies before filing in federal court.",
+            "best_actual": "What about Patsy? We said no exhaustion requirement for 1983.",
+            "similarity": 0.72,
+            "justice_id": "kagan",
+            "justice_name": "Kagan, J.",
+            "transcript_context": "JUSTICE KAGAN: What about Patsy? We said no exhaustion requirement for 1983. How can state courts impose one when we said federal courts can't?"
+          },
+          {
+            "predicted": "Let me understand the practical effect here. Your clients are waiting years for benefits decisions.",
+            "best_actual": "These are people waiting years. What do they do in the meantime?",
+            "similarity": 0.69,
+            "justice_id": "sotomayor",
+            "justice_name": "Sotomayor, J.",
+            "transcript_context": "JUSTICE SOTOMAYOR: These are people waiting years. What do they do in the meantime? They can't work. They can't get benefits. And you say they can't sue either?"
+          },
+          {
+            "predicted": "Where in the text or history of § 1983 do we find that state courts cannot apply their own procedural rules?",
+            "best_actual": "But this is a state court applying state procedure. Where's the federal hook?",
+            "similarity": 0.65,
+            "justice_id": "thomas",
+            "justice_name": "Thomas, J.",
+            "transcript_context": "JUSTICE THOMAS: But this is a state court applying state procedure. Where's the federal hook? States have always had procedural requirements."
+          },
+          {
+            "predicted": "Alabama says its exhaustion rule applies to all claims, not just § 1983 claims.",
+            "best_actual": "This rule is neutral. It applies to everyone.",
+            "similarity": 0.61,
+            "justice_id": "alito",
+            "justice_name": "Alito, J.",
+            "transcript_context": "JUSTICE ALITO: This rule is neutral. It applies to everyone. Why single it out for preemption just because 1983 plaintiffs find it inconvenient?"
+          },
+          {
+            "predicted": "Counsel, what is the limiting principle of your argument?",
+            "best_actual": "What's the line? How do we write a rule that doesn't swallow all state procedure?",
+            "similarity": 0.58,
+            "justice_id": "roberts",
+            "justice_name": "Roberts, C.J.",
+            "transcript_context": "CHIEF JUSTICE ROBERTS: What's the line? How do we write a rule that doesn't swallow all state procedure but addresses your concern?"
+          }
+        ],
+        "transcript_url": "https://www.supremecourt.gov/oral_arguments/argument_transcripts/2024/23-191_o759.pdf"
       }
     },
     {

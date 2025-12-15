@@ -549,97 +549,53 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         st.markdown("---")
         st.markdown("**Supreme Court Bench Layout** *(as viewed from audience)*")
         
-        # Build bench layout HTML with responsive design
-        bench_layout_html = """
-        <style>
-        .bench-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            margin: 20px 0;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        .bench-row {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .justice-card {
-            padding: 12px 16px;
-            border-radius: 8px;
-            text-align: center;
-            min-width: 100px;
-            color: white;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
-        }
-        .justice-card:hover {
-            transform: scale(1.05);
-        }
-        .justice-name {
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-        .justice-vote {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-        .justice-conf {
-            font-size: 11px;
-            opacity: 0.8;
-        }
-        .chief-justice {
-            border: 2px solid gold;
-        }
-        </style>
-        """
-        
-        def make_justice_card(justice_id, display_name, is_chief=False):
+        def render_justice_box(justice_id, display_name, is_chief=False):
+            """Render a justice vote box using Streamlit native components."""
             vote = votes_by_id.get(justice_id.lower())
             if vote:
-                color, emoji, opacity = get_vote_style(vote.vote, vote.confidence)
-                chief_class = "chief-justice" if is_chief else ""
-                return f'''
-                <div class="justice-card {chief_class}" style="background-color: {color}; opacity: {opacity};">
-                    <div class="justice-name">{emoji} {display_name}</div>
-                    <div class="justice-vote">{vote.vote}</div>
-                    <div class="justice-conf">{vote.confidence * 100:.0f}%</div>
-                </div>
-                '''
-            return f'<div class="justice-card" style="background-color: #6b7280;"><div class="justice-name">{display_name}</div><div class="justice-vote">N/A</div></div>'
+                color, emoji, _ = get_vote_style(vote.vote, vote.confidence)
+                chief_marker = " 👑" if is_chief else ""
+                vote_label = vote.vote[:3]  # PET/RES/UNC
+                st.markdown(
+                    f"""<div style="background-color: {color}; color: white; padding: 10px; 
+                    border-radius: 8px; text-align: center; margin: 2px;">
+                    <strong>{emoji} {display_name}{chief_marker}</strong><br>
+                    <small>{vote_label} • {vote.confidence * 100:.0f}%</small>
+                    </div>""",
+                    unsafe_allow_html=True
+                )
+            else:
+                st.markdown(
+                    f"""<div style="background-color: #6b7280; color: white; padding: 10px; 
+                    border-radius: 8px; text-align: center; margin: 2px;">
+                    <strong>{display_name}</strong><br><small>N/A</small>
+                    </div>""",
+                    unsafe_allow_html=True
+                )
         
-        # Front row (5 justices, Roberts center)
-        front_row = f'''
-        <div class="bench-row">
-            {make_justice_card("jackson", "Jackson")}
-            {make_justice_card("kavanaugh", "Kavanaugh")}
-            {make_justice_card("roberts", "Roberts", is_chief=True)}
-            {make_justice_card("gorsuch", "Gorsuch")}
-            {make_justice_card("barrett", "Barrett")}
-        </div>
-        '''
+        # Back row (4 justices) - more senior by service
+        back_cols = st.columns(4)
+        with back_cols[0]:
+            render_justice_box("thomas", "Thomas")
+        with back_cols[1]:
+            render_justice_box("sotomayor", "Sotomayor")
+        with back_cols[2]:
+            render_justice_box("alito", "Alito")
+        with back_cols[3]:
+            render_justice_box("kagan", "Kagan")
         
-        # Back row (4 justices)
-        back_row = f'''
-        <div class="bench-row">
-            {make_justice_card("thomas", "Thomas")}
-            {make_justice_card("sotomayor", "Sotomayor")}
-            {make_justice_card("alito", "Alito")}
-            {make_justice_card("kagan", "Kagan")}
-        </div>
-        '''
-        
-        # Combine and display
-        full_bench_html = bench_layout_html + f'''
-        <div class="bench-container">
-            {back_row}
-            {front_row}
-        </div>
-        '''
-        st.markdown(full_bench_html, unsafe_allow_html=True)
+        # Front row (5 justices) - Roberts center
+        front_cols = st.columns(5)
+        with front_cols[0]:
+            render_justice_box("jackson", "Jackson")
+        with front_cols[1]:
+            render_justice_box("kavanaugh", "Kavanaugh")
+        with front_cols[2]:
+            render_justice_box("roberts", "Roberts", is_chief=True)
+        with front_cols[3]:
+            render_justice_box("gorsuch", "Gorsuch")
+        with front_cols[4]:
+            render_justice_box("barrett", "Barrett")
         
         # Detailed vote cards below
         st.markdown("---")
@@ -743,14 +699,6 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                 google_key = (os.getenv("GOOGLE_AI_KEY") or "").strip()
                 embed_model = (os.getenv("GOOGLE_EMBED_MODEL") or "").strip() or "models/text-embedding-004"
                 
-                # Debug logging
-                import sys
-                if not google_key:
-                    print("⚠️ DEBUG: GOOGLE_AI_KEY is empty or not set", file=sys.stderr)
-                if not embed_model:
-                    print("⚠️ DEBUG: GOOGLE_EMBED_MODEL is empty or not set", file=sys.stderr)
-                print(f"🔍 DEBUG: Using embed_model: {embed_model}", file=sys.stderr)
-                
                 if not google_key:
                     score, matches, explanation = 0, [], "⚠️ Backtest requires GOOGLE_AI_KEY for semantic similarity. Please configure it in env.local or in the sidebar above."
                     backtest_progress.progress(100)
@@ -801,10 +749,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                     except Exception as e:
                         backtest_progress.progress(100)
                         backtest_status.empty()
-                        import traceback
-                        error_details = traceback.format_exc()
-                        print(f"⚠️ ERROR: Semantic backtest exception:\n{error_details}", file=sys.stderr)
-                        score, matches, explanation = 0, [], f"⚠️ Semantic backtest failed: {str(e)}\n\n**Debug info:**\n- GOOGLE_AI_KEY: {'Set' if google_key else 'Not set'}\n- GOOGLE_EMBED_MODEL: {embed_model}\n\nPlease check your configuration in env.local or the sidebar above."
+                        score, matches, explanation = 0, [], f"⚠️ Could not complete backtest analysis. Please try again later."
                 
                 # Store backtest results
                 backtest_score = score
