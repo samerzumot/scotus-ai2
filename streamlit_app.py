@@ -484,10 +484,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             st.warning(f"⚠️ **FALLBACK DATA**: {prediction.overall.why}")
         
         # Display results
-        if use_precomputed:
-            st.success("✅ **Instant results** - Precomputed predictions loaded (no API calls)")
-        else:
-            st.success("✅ Analysis complete!")
+        st.success("✅ Analysis complete!")
         
         # Check for fallback
         is_fallback = prediction.model.provider == "fallback"
