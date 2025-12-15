@@ -52,6 +52,108 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# Professional legal-themed styling
+st.markdown("""
+<style>
+/* Global typography improvements */
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Source+Sans+Pro:wght@400;600&display=swap');
+
+/* Headers with serif font for legal authority */
+h1 {
+    font-family: 'Merriweather', Georgia, serif !important;
+    color: #1a1a2e !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px;
+}
+
+h2 {
+    font-family: 'Merriweather', Georgia, serif !important;
+    color: #2d3748 !important;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+    margin-top: 2rem !important;
+}
+
+h3 {
+    font-family: 'Source Sans Pro', sans-serif !important;
+    color: #4a5568 !important;
+    font-weight: 600 !important;
+}
+
+/* Better metric styling */
+[data-testid="stMetric"] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1rem;
+    border-radius: 10px;
+    color: white;
+}
+
+[data-testid="stMetric"] label {
+    color: rgba(255,255,255,0.9) !important;
+}
+
+[data-testid="stMetric"] [data-testid="stMetricValue"] {
+    color: white !important;
+    font-weight: 700;
+}
+
+/* Cleaner expanders */
+.streamlit-expanderHeader {
+    font-family: 'Source Sans Pro', sans-serif !important;
+    font-weight: 600 !important;
+    background-color: #f7fafc;
+    border-radius: 8px;
+}
+
+/* Button styling */
+.stButton > button {
+    background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
+}
+
+/* Info/Success/Warning boxes */
+.stAlert {
+    border-radius: 8px;
+    border-left-width: 4px;
+}
+
+/* Hide default streamlit branding */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+/* Spacing improvements */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* Custom vote cards for bench layout */
+.vote-card {
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    margin: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.vote-card:hover {
+    transform: scale(1.02);
+}
+</style>
+""", unsafe_allow_html=True)
+
 # Initialize session state
 if "session" not in st.session_state:
     st.session_state.session = None
@@ -144,25 +246,21 @@ def run_async(coro):
 
 
 def main():
-    st.title("⚖️ SCOTUS AI: Legal Strategist")
-    st.markdown("**AI-Powered Vote Predictions & Oral Argument Questions**")
+    # Clean header
+    st.title("⚖️ SCOTUS AI")
+    st.markdown("*Predict Supreme Court votes and oral argument questions from legal briefs*")
     
+    # Sidebar for configuration (hidden by default)
     with st.sidebar:
-        st.header("Configuration")
+        st.header("Settings")
         google_key = st.text_input(
             "Google AI Key",
             value=os.getenv("GOOGLE_AI_KEY", ""),
             type="password",
-            help="Get your key at https://aistudio.google.com/app/apikey"
+            help="Required for fresh predictions. Get key at aistudio.google.com"
         )
         if google_key:
             os.environ["GOOGLE_AI_KEY"] = google_key
-        
-        st.markdown("---")
-        st.caption("Set environment variables or enter them above")
-    
-    # Sample briefs section
-    st.header("Upload Brief")
     
     # Load sample briefs
     sample_briefs_path = _ROOT / "data" / "sample_briefs.json"
@@ -176,39 +274,45 @@ def main():
         except Exception:
             pass
     
-    # Show sample briefs if available
+    # Two-column layout for input selection
     use_sample = False
     selected_sample = None
+    uploaded_file = None
+    
+    # Input section
+    st.header("Select a Case")
     
     if sample_briefs:
-        st.subheader("Quick Start: Sample Briefs")
-        st.caption("Try these pre-loaded briefs with backtest data (no upload needed)")
-        
-        sample_options = ["-- Select a sample brief --"] + [f"{s['case_name']} ({s.get('term', 'N/A')})" for s in sample_briefs]
+        # Sample brief selection
+        sample_options = ["Select a case..."] + [f"{s['case_name']} ({s.get('term', 'N/A')})" for s in sample_briefs]
         selected_sample_name = st.selectbox(
-            "Choose a sample brief",
+            "Pre-loaded cases with backtest data",
             sample_options,
-            key="sample_brief_selector"
+            key="sample_brief_selector",
+            label_visibility="collapsed"
         )
         
-        if selected_sample_name != "-- Select a sample brief --":
+        if selected_sample_name != "Select a case...":
             selected_sample = next((s for s in sample_briefs if f"{s['case_name']} ({s.get('term', 'N/A')})" == selected_sample_name), None)
             if selected_sample:
                 use_sample = True
-                st.success(f"Selected: **{selected_sample['case_name']}**")
-                if selected_sample.get('summary'):
-                    st.info(f"*{selected_sample['summary']}*")
+                # Show case summary in a styled card
+                st.markdown(f"""
+                <div style="background: #f8fafc; border-left: 4px solid #3182ce; padding: 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0;">
+                    <strong>{selected_sample['case_name']}</strong><br>
+                    <span style="color: #718096;">{selected_sample.get('summary', '')}</span>
+                </div>
+                """, unsafe_allow_html=True)
     
-    st.divider()
-    
-    # File upload
-    uploaded_file = None
+    # File upload (collapsible)
     if not use_sample:
-        uploaded_file = st.file_uploader(
-            "Or upload your own PDF brief",
-            type=["pdf"],
-            help="Upload a PDF brief to get predictions"
-        )
+        with st.expander("Or upload your own brief (PDF)", expanded=True):
+            uploaded_file = st.file_uploader(
+                "Upload PDF",
+                type=["pdf"],
+                key="brief_uploader",
+                label_visibility="collapsed"
+            )
     
     if not use_sample and not uploaded_file:
         st.info("👆 Select a sample brief above or upload your own PDF to get started")
