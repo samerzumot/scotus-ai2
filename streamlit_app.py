@@ -80,16 +80,16 @@ h3 {
     font-weight: 600 !important;
 }
 
-/* Better metric styling */
+/* Better metric styling - professional solid colors */
 [data-testid="stMetric"] {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #1a365d;
     padding: 1rem;
-    border-radius: 10px;
+    border-radius: 8px;
     color: white;
 }
 
 [data-testid="stMetric"] label {
-    color: rgba(255,255,255,0.9) !important;
+    color: rgba(255,255,255,0.85) !important;
 }
 
 [data-testid="stMetric"] [data-testid="stMetricValue"] {
@@ -105,20 +105,20 @@ h3 {
     border-radius: 8px;
 }
 
-/* Button styling */
+/* Button styling - professional solid */
 .stButton > button {
-    background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+    background: #1a365d;
     color: white;
     font-weight: 600;
     border: none;
     padding: 0.75rem 2rem;
     border-radius: 8px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
+    background: #2c5282;
+    box-shadow: 0 2px 8px rgba(26, 54, 93, 0.2);
 }
 
 /* Info/Success/Warning boxes */
