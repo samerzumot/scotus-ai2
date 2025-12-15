@@ -268,6 +268,7 @@ def main():
         # Get brief text and metadata
         use_precomputed = False
         prediction = None
+        precomputed_prediction = None
         
         if use_sample and selected_sample:
             brief_text = selected_sample.get("brief_text", "")
@@ -275,6 +276,10 @@ def main():
             case_hint = selected_sample.get("case_hint", selected_sample.get("case_name", ""))
             transcript_url = selected_sample.get("transcript_url", "")
             precomputed_prediction = selected_sample.get("precomputed_prediction")
+            
+            # Set use_precomputed to True if we have cached data
+            if precomputed_prediction:
+                use_precomputed = True
             
             if not brief_text:
                 st.error("Sample brief text is missing")
@@ -292,8 +297,6 @@ def main():
                     st.warning(f"⚠️ Could not load precomputed prediction: {e}. Generating fresh prediction...")
                     use_precomputed = False
                     precomputed_prediction = None  # Fall through to generate fresh
-            else:
-                use_precomputed = False
         else:
             # Read PDF from uploaded file
             with st.spinner("Reading PDF..."):
