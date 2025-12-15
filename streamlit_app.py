@@ -162,7 +162,7 @@ def main():
         st.caption("Set environment variables or enter them above")
     
     # Sample briefs section
-    st.header("📄 Upload Brief")
+    st.header("Upload Brief")
     
     # Load sample briefs
     sample_briefs_path = _ROOT / "data" / "sample_briefs.json"
@@ -181,7 +181,7 @@ def main():
     selected_sample = None
     
     if sample_briefs:
-        st.subheader("📚 Quick Start: Sample Briefs")
+        st.subheader("Quick Start: Sample Briefs")
         st.caption("Try these pre-loaded briefs with backtest data (no upload needed)")
         
         sample_options = ["-- Select a sample brief --"] + [f"{s['case_name']} ({s.get('term', 'N/A')})" for s in sample_briefs]
@@ -195,9 +195,9 @@ def main():
             selected_sample = next((s for s in sample_briefs if f"{s['case_name']} ({s.get('term', 'N/A')})" == selected_sample_name), None)
             if selected_sample:
                 use_sample = True
-                st.success(f"✅ Selected: **{selected_sample['case_name']}**")
+                st.success(f"Selected: **{selected_sample['case_name']}**")
                 if selected_sample.get('summary'):
-                    st.info(f"📋 *{selected_sample['summary']}*")
+                    st.info(f"*{selected_sample['summary']}*")
     
     st.divider()
     
@@ -244,7 +244,7 @@ def main():
                 candidates = find_transcript_urls(case_name)
                 if candidates:
                     transcript_url = candidates[0]
-                    st.info(f"🔍 Auto-detected transcript: {transcript_url}")
+                    st.info(f"Auto-detected transcript: {transcript_url}")
     else:
         # Use sample values (will be set in analyze section)
         uploader_side = "UNKNOWN"
@@ -260,7 +260,7 @@ def main():
         )
     
     # Analyze button
-    if st.button("🔍 Analyze Brief", type="primary", use_container_width=True):
+    if st.button("Analyze Brief", type="primary", use_container_width=True):
         if not use_sample and not uploaded_file:
             st.error("Please select a sample brief or upload a PDF first")
             return
@@ -285,7 +285,7 @@ def main():
                 st.error("Sample brief text is missing")
                 return
             
-            st.info(f"📄 Using sample brief: **{selected_sample['case_name']}**")
+            st.info(f"Using sample brief: **{selected_sample['case_name']}**")
             
             # Use precomputed prediction if available (instant results - skip all loading steps)
             if use_precomputed and precomputed_prediction:
@@ -294,7 +294,7 @@ def main():
                     prediction = VoteQuestionPrediction.model_validate(precomputed_prediction)
                     # Skip directly to displaying results - no progress bars, no API calls
                 except Exception as e:
-                    st.warning(f"⚠️ Could not load precomputed prediction: {e}. Generating fresh prediction...")
+                    st.warning(f"Could not load precomputed prediction: {e}. Generating fresh prediction...")
                     use_precomputed = False
                     precomputed_prediction = None  # Fall through to generate fresh
         else:
@@ -349,7 +349,7 @@ def main():
                     google_client = GoogleInferenceClient(api_key=google_key)
                     
                     # Step 2: Load historical cases corpus
-                    status_text.text("📚 Loading historical cases corpus...")
+                    status_text.text("Loading historical cases corpus...")
                     detail_text.text(f"Reading cases from {corpus_path}")
                     progress_bar.progress(10)
                     await asyncio.sleep(0.1)
@@ -364,7 +364,7 @@ def main():
                     await asyncio.sleep(0.1)
                     
                     # Step 3: Generate embeddings and retrieve similar cases
-                    status_text.text("🔍 Finding similar historical cases...")
+                    status_text.text("Finding similar historical cases...")
                     detail_text.text("Generating embeddings and computing similarity")
                     progress_bar.progress(30)
                     await asyncio.sleep(0.1)
@@ -414,7 +414,7 @@ def main():
                     )
                     
                     # Step 5: Generate predictions with AI
-                    status_text.text("🤖 Generating predictions with AI...")
+                    status_text.text("Generating predictions with AI...")
                     detail_text.text(f"Using {predict_model} to analyze brief and predict votes/questions")
                     progress_bar.progress(65)
                     await asyncio.sleep(0.1)
@@ -438,7 +438,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                     )
                     
                     # Step 6: Validate and normalize results
-                    status_text.text("✅ Validating and processing results...")
+                    status_text.text("Validating and processing results...")
                     detail_text.text("Normalizing confidence values and validating predictions")
                     progress_bar.progress(85)
                     await asyncio.sleep(0.1)
@@ -451,18 +451,18 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                     )
                     
                     progress_bar.progress(100)
-                    status_text.text("✅ Analysis complete!")
+                    status_text.text("Analysis complete!")
                     detail_text.text(f"Generated predictions for {len(prediction.votes)} justices")
                     await asyncio.sleep(0.5)  # Show completion message briefly
                     
                     return prediction
                     
                 except asyncio.TimeoutError:
-                    status_text.text("⏱️ Analysis timed out")
+                    status_text.text("Analysis timed out")
                     detail_text.text("The operation took longer than 60 seconds")
                     raise RuntimeError("Analysis timed out after 60 seconds. The brief may be too long or the API is slow.")
                 except Exception as e:
-                    status_text.text("❌ Error during analysis")
+                    status_text.text("Error during analysis")
                     detail_text.text(f"Error: {str(e)[:100]}")
                     raise
                 finally:
@@ -474,25 +474,25 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                 progress_bar.empty()
                 status_text.empty()
                 detail_text.empty()
-                st.error(f"❌ Analysis failed: {str(e)}")
-                st.info("💡 **Tips:**\n- Try a shorter brief\n- Check your Google AI key\n- The API may be experiencing delays")
+                st.error(f"Analysis failed: {str(e)}")
+                st.info("**Tips:**\n- Try a shorter brief\n- Check your Google AI key\n- The API may be experiencing delays")
                 return
         
         # Check for fallback
         is_fallback = prediction.model.provider == "fallback"
         if is_fallback:
-            st.warning(f"⚠️ **FALLBACK DATA**: {prediction.overall.why}")
+            st.warning(f"**FALLBACK DATA**: {prediction.overall.why}")
         
         # Display results
-        st.success("✅ Analysis complete!")
+        st.success("Analysis complete!")
         
         # Check for fallback
         is_fallback = prediction.model.provider == "fallback"
         if is_fallback:
-            st.warning(f"⚠️ **FALLBACK DATA**: {prediction.overall.why}")
+            st.warning(f"**FALLBACK DATA**: {prediction.overall.why}")
         
         # Overall prediction
-        st.header("🎯 Overall Prediction")
+        st.header("Overall Prediction")
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("Predicted Winner", prediction.overall.predicted_winner)
@@ -509,7 +509,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             st.info(prediction.overall.why)
         
         # Votes - Visual Bench Layout
-        st.header("👨‍⚖️ Predicted Votes")
+        st.header("Predicted Votes")
         
         # Create a visual bench layout (traditional SCOTUS seating)
         # Bench order from left to right as viewed from audience:
@@ -597,7 +597,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         
         # Detailed vote cards below
         st.markdown("---")
-        st.subheader("📋 Detailed Vote Predictions")
+        st.subheader("Detailed Vote Predictions")
         vote_cols = st.columns(3)
         for idx, vote in enumerate(prediction.votes):
             col_idx = idx % 3
@@ -657,7 +657,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             async def _fetch_transcript():
                 session = await get_session_async()
                 try:
-                    backtest_status.text("📥 Fetching transcript (checking cache first)...")
+                    backtest_status.text("Fetching transcript (checking cache first)...")
                     backtest_progress.progress(10)
                     
                     import asyncio
@@ -673,7 +673,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                     backtest_progress.progress(50)
                     return transcript
                 except asyncio.TimeoutError:
-                    backtest_status.text("⏱️ Transcript fetch timed out (>8s)")
+                    backtest_status.text("Transcript fetch timed out (>8s)")
                     raise RuntimeError("Transcript fetch timed out after 8 seconds")
                 finally:
                     await session.close()
@@ -683,7 +683,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             except Exception as e:
                 backtest_progress.empty()
                 backtest_status.empty()
-                st.warning(f"⚠️ Could not fetch transcript: {str(e)}")
+                st.warning(f"Could not fetch transcript: {str(e)}")
                 transcript = None
             
             if transcript and transcript.get("transcript_found"):
@@ -704,11 +704,11 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                 embed_model = (os.getenv("GOOGLE_EMBED_MODEL") or "").strip() or "models/text-embedding-004"
                 
                 if not google_key:
-                    score, matches, explanation = 0, [], "⚠️ Backtest requires GOOGLE_AI_KEY for semantic similarity. Please configure it in env.local or in the sidebar above."
+                    score, matches, explanation = 0, [], "Backtest requires GOOGLE_AI_KEY for semantic similarity. Please configure it in env.local or in the sidebar above."
                     backtest_progress.progress(100)
                     backtest_status.empty()
                 elif not embed_model:
-                    score, matches, explanation = 0, [], "⚠️ Backtest requires GOOGLE_EMBED_MODEL. Defaulting to models/text-embedding-004."
+                    score, matches, explanation = 0, [], "Backtest requires GOOGLE_EMBED_MODEL. Defaulting to models/text-embedding-004."
                     embed_model = "models/text-embedding-004"
                     # Continue with default
                     try:
@@ -731,7 +731,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                     except Exception as e:
                         backtest_progress.progress(100)
                         backtest_status.empty()
-                        score, matches, explanation = 0, [], f"⚠️ Semantic backtest failed: {str(e)}. Please check GOOGLE_AI_KEY and GOOGLE_EMBED_MODEL configuration."
+                        score, matches, explanation = 0, [], f"Semantic backtest failed: {str(e)}. Please check GOOGLE_AI_KEY and GOOGLE_EMBED_MODEL configuration."
                 else:
                     try:
                         google_client = GoogleInferenceClient(api_key=google_key)
@@ -753,7 +753,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                     except Exception as e:
                         backtest_progress.progress(100)
                         backtest_status.empty()
-                        score, matches, explanation = 0, [], f"⚠️ Could not complete backtest analysis. Please try again later."
+                        score, matches, explanation = 0, [], f"Could not complete backtest analysis. Please try again later."
                 
                 # Store backtest results
                 backtest_score = score
@@ -779,10 +779,10 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
             elif transcript:
                 backtest_progress.empty()
                 backtest_status.empty()
-                st.warning(f"⚠️ Transcript not found at: {transcript_url}")
+                st.warning(f"Transcript not found at: {transcript_url}")
         
         # Questions grouped by justice
-        st.header("❓ Predicted Questions")
+        st.header("Predicted Questions")
         
         # Group questions by justice
         from utils.scotus import BENCH_ORDER
@@ -832,10 +832,10 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                             
                             if best_actual:
                                 st.divider()
-                                st.markdown("**📋 Best Matching Actual Question:**")
+                                st.markdown("**Best Matching Actual Question:**")
                                 st.markdown(f"*\"{best_actual}\"*")
                                 if actual_citations:
-                                    st.caption(f"📚 Citations: {', '.join(actual_citations)}")
+                                    st.caption(f"Citations: {', '.join(actual_citations)}")
                                 
                                 # Show transcript context - check precomputed first, then extract live
                                 precomputed_context = match_info.get("transcript_context", "") if isinstance(match_info, dict) else ""
@@ -848,7 +848,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                 
                                 if precomputed_context:
                                     # Use precomputed context from sample brief
-                                    with st.expander("📄 View context from transcript", expanded=True):
+                                    with st.expander("View context from transcript", expanded=True):
                                         # Highlight the matched question in the context
                                         context_display = precomputed_context
                                         if best_actual.lower() in context_display.lower():
@@ -861,26 +861,26 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                                 context_display = f"{before}**{matched}**{after}"
                                         st.markdown(f"...{context_display}...")
                                         if display_url:
-                                            st.caption(f"🔗 [View full transcript]({display_url})")
+                                            st.caption(f"[View full transcript]({display_url})")
                                 elif transcript_url and transcript:
                                     # Live extraction fallback
                                     transcript_text = transcript.get("transcript_text", "")
                                     if transcript_text:
                                         question_snippet = _extract_question_snippet(transcript_text, best_actual)
                                         if question_snippet:
-                                            with st.expander("📄 View context from transcript", expanded=True):
+                                            with st.expander("View context from transcript", expanded=True):
                                                 st.markdown(question_snippet)
-                                                st.caption(f"🔗 [View full transcript]({transcript_url})")
+                                                st.caption(f"[View full transcript]({transcript_url})")
                                 elif display_url:
                                     # Just show transcript link if no context available
-                                    st.caption(f"🔗 [View full transcript]({display_url})")
+                                    st.caption(f"[View full transcript]({display_url})")
                                 # Show match quality indicator based on similarity level
                                 if similarity >= 0.7:
                                     st.progress(similarity, text=f"🎯 Strong Match: {similarity * 100:.0f}%")
                                 elif similarity >= 0.5:
                                     st.progress(similarity, text=f"✅ Good Match: {similarity * 100:.0f}%")
                                 elif similarity >= 0.3:
-                                    st.progress(similarity, text=f"⚠️ Partial Match: {similarity * 100:.0f}%")
+                                    st.progress(similarity, text=f"Partial Match: {similarity * 100:.0f}%")
                                 else:
                                     st.progress(similarity, text=f"❌ Weak Match: {similarity * 100:.0f}%")
                                     st.caption("ℹ️ This match has low similarity - the actual question may address different aspects of the case.")
@@ -930,7 +930,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
                                     with st.expander(f"📌 '{mention['topic']}' mentioned"):
                                         st.markdown(f"*...{mention['snippet']}...*")
                                         if transcript_url:
-                                            st.caption(f"🔗 [View in transcript]({transcript_url})")
+                                            st.caption(f"[View in transcript]({transcript_url})")
                             else:
                                 st.caption("ℹ️ No mentions of key topics found in justice questions")
                     
@@ -951,7 +951,7 @@ Return ONLY valid JSON matching the exact schema provided. No markdown, no expla
         
         # Retrieved cases with links
         if prediction.retrieved_cases:
-            st.header("📚 Similar Historical Cases")
+            st.header("Similar Historical Cases")
             for case in prediction.retrieved_cases:
                 # Build case name with link - ONLY use Google Search API to find verified links
                 # Never fall back to hallucinated/estimated links
